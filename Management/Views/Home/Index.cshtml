@@ -7,6 +7,37 @@
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
 
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>  
+ <script>  
+     $(document).ready(function () {  
+         $.ajax({  
+             type: "POST",  
+             url: "JavaScript.aspx/GetData",  
+             contentType: "application/json; charset=utf-8",  
+             dataType: "json",  
+             success: function (response) {  
+                 var risultati = response.d.split(";");
+                 risultati.forEach(elementi => 
+                 
+                 var contenuto = elementi.split(":");
+                 var id = contenuto[0];
+                 var valore = contenuto[1];
+                 if(valore == 1)
+                    document.getElementById(id).style.backgroundColor = "green";
+                 else
+                    document.getElementById(id).style.backgroundColor = "red";
+                 
+                 );
+                 
+                 $("#Content").text(response.d);  
+             },  
+             failure: function (response) {  
+                 alert(response.d);  
+             }  
+         });  
+     });  
+ </script>  
+
 
 <table style="width:100%">
 <tr>
@@ -15,26 +46,26 @@
   </tr>
   <tr>
     <th>Alerting</th>
-    <th id="alerting">Offline</th>
+    <th id="Alerting">Offline</th>
   </tr>
   <tr>
     <td>Database</td>
-    <td id="database">Offline</td>
+    <td id="Database">Offline</td>
   </tr>
   <tr>
     <td>Hub</td>
-    <td id="hub">Offline</td>
+    <td id="Hub">Offline</td>
   </tr>
   <tr>
     <th>Nodered</th>
-    <th id="nodered">Offline</th>
+    <th id="Nodered">Offline</th>
   </tr>
   <tr>
     <td>Grafana</td>
-    <td id="grafana">Offline</td>
+    <td id="Grafana">Offline</td>
   </tr>
   <tr>
     <td>RabbitMQ</td>
-    <td id="rabbitMQ">Offline</td>
+    <td id="RabbitMQ">Offline</td>
   </tr>
 </table>
