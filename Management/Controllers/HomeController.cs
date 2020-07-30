@@ -53,7 +53,7 @@ namespace Management.Controllers
         }
 
      
-        public async string CheckAvailability(Modulo modulo)
+        public async Task<string> CheckAvailability(Modulo modulo)
         {
             var path = Path.Combine(_hostingEnvironment.WebRootPath, "config.json");
 

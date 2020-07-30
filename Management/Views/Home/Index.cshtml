@@ -9,12 +9,17 @@
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>  
  <script>  
-     $(document).ready(function () {  
+     var myVar = setInterval(Ping, 1000);
+
+     function Ping() {
+
+        $(document).ready(function () {  
          $.ajax({  
-             type: "POST",  
-             url: "JavaScript.aspx/GetData",  
+             type: "GET",  
+             url: "HomeController/CheckAll",  
              contentType: "application/json; charset=utf-8",  
              dataType: "json",  
+
              success: function (response) {  
                  var risultati = response.d.split(";");
                  risultati.forEach(elementi => 
@@ -29,16 +34,17 @@
                  
                  );
                  
-                 $("#Content").text(response.d);  
              },  
              failure: function (response) {  
-                 alert(response.d);  
+                 alert("Fanculo!");  
              }  
          });  
-     });  
+     });
+
+    }
  </script>  
 
-
+ <script>createtable();</script>
 <table style="width:100%">
 <tr>
     <th>Nome Servizio</th>

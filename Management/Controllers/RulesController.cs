@@ -23,8 +23,6 @@ namespace Management.Controllers
         {
             _hostingEnvironment = hostEnvironment;
             var path = Path.Combine(_hostingEnvironment.WebRootPath, "config.json");
-            _config = Utils.get
-
         }
 
 
