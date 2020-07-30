@@ -10,7 +10,7 @@ namespace Utils
     {
         public PingServer(string ip, int port)
         {
-
+            
             var listener = new HttpListener();
 
             listener.Prefixes.Add($"http://{ip}:{port}/"); // ip e porta in ascolto del server
