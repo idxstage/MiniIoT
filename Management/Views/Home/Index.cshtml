@@ -1,77 +1,112 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+	ViewData["Title"] = "Home Page";
 }
+<html>
+<head>
+	<div class="text-center">
+		<h1 class="display-4">Applicazione Monitoring</h1>
+	</div>
+</head>
+<body>
+	<table style="width:100%;">
+		<tr>
+			<th>Nome Servizio</th>
+			<th>Status</th>
+		</tr>
+		<tr>
+			<th>Alerting</th>
+			<th id="Alerting">Offline</th>
+		</tr>
+		<tr>
+			<td>Database</td>
+			<td id="Database">Offline</td>
+		</tr>
+		<tr>
+			<td>Hub</td>
+			<td id="Hub">Offline</td>
+		</tr>
+		<tr>
+			<th>Nodered</th>
+			<th id="Nodered">Offline</th>
+		</tr>
+		<tr>
+			<td>Grafana</td>
+			<td id="Grafana">Offline</td>
+		</tr>
+		<tr>
+			<td>RabbitMQ</td>
+			<td id="RabbitMQ">Offline</td>
+		</tr>
+	</table>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+</body>
 
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>  
- <script>  
-     var myVar = setInterval(Ping, 1000);
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script>
+	$(document).ready(function () {
 
-     function Ping() {
+		function StartPing() {
+			var myVar = setInterval(Ping, 10000);
+		}
 
-        $(document).ready(function () {  
-         $.ajax({  
-             type: "GET",  
-             url: "HomeController/CheckAll",  
-             contentType: "application/json; charset=utf-8",  
-             dataType: "json",  
+		/*
+		function getTiming() {
+			$.ajax({
+				type: "GET",
+				url: "/Home/GetTiming",
+				contentType: "application/text; charset=utf-8",
+				dataType: "text",
 
-             success: function (response) {  
-                 var risultati = response.d.split(";");
-                 risultati.forEach(elementi => 
-                 
-                 var contenuto = elementi.split(":");
-                 var id = contenuto[0];
-                 var valore = contenuto[1];
-                 if(valore == 1)
-                    document.getElementById(id).style.backgroundColor = "green";
-                 else
-                    document.getElementById(id).style.backgroundColor = "red";
-                 
-                 );
-                 
-             },  
-             failure: function (response) {  
-                 alert("Fanculo!");  
-             }  
-         });  
-     });
+				success: function (response) {
+					return parseInt(response) * 1000;
+				},
+				failure: function (response) {
+					alert("ops, qualcosa è andato storto");
+				}
 
-    }
- </script>  
+			});
+		}
+		*/
 
- <script>createtable();</script>
-<table style="width:100%">
-<tr>
-    <th>Nome Servizio</th>
-    <th>Status</th>
-  </tr>
-  <tr>
-    <th>Alerting</th>
-    <th id="Alerting">Offline</th>
-  </tr>
-  <tr>
-    <td>Database</td>
-    <td id="Database">Offline</td>
-  </tr>
-  <tr>
-    <td>Hub</td>
-    <td id="Hub">Offline</td>
-  </tr>
-  <tr>
-    <th>Nodered</th>
-    <th id="Nodered">Offline</th>
-  </tr>
-  <tr>
-    <td>Grafana</td>
-    <td id="Grafana">Offline</td>
-  </tr>
-  <tr>
-    <td>RabbitMQ</td>
-    <td id="RabbitMQ">Offline</td>
-  </tr>
-</table>
+
+		function Ping() {
+
+			$.ajax({
+				type: "GET",
+				url: "/Home/CheckAll",
+				contentType: "application/text; charset=utf-8",
+				dataType: "text",
+
+				success: function (response) {
+					var risultati = response.split(";");
+
+					risultati.forEach(elementi => {
+						var contenuto = elementi.split(":");
+						var id = contenuto[0];
+						var valore = parseInt(contenuto[1]);
+						if (valore == 1) {
+							document.getElementById(id).style.backgroundColor = "green";
+							document.getElementById(id).innerText = "Online";
+						}
+						else {
+							document.getElementById(id).style.backgroundColor = "red";
+							document.getElementById(id).innerText = "Offline";
+						}
+					});
+
+				},
+				failure: function (response) {
+					alert("ops, qualcosa è andato storto");
+				}
+			});
+
+
+		}
+
+
+		StartPing();
+	
+	});
+</script>
+
+</html>

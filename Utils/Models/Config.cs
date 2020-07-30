@@ -82,6 +82,7 @@ namespace Utils
 
     public class Monitoring
     {
+        public int Timing { get; set; }
         public List<Modulo> Modules { get; set; }
     }
 
@@ -90,7 +91,6 @@ namespace Utils
         public string Name { get; set; }
         public string Ip { get; set; }
         public int Port { get; set; }
-        public int Timing { get; set; }
     }
 
 }
