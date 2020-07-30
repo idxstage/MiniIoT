@@ -130,5 +130,10 @@ namespace Monitoring
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }    
         }
+
+        private void FormPrincipale_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

@@ -195,6 +195,7 @@
             this.Name = "FormPrincipale";
             this.ShowIcon = false;
             this.Text = "Monitoring";
+            this.Load += new System.EventHandler(this.FormPrincipale_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pAlerting)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pDatabase)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pHub)).EndInit();
