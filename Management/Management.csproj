@@ -5,6 +5,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\config.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MongoDB.Driver" Version="2.10.4" />
   </ItemGroup>
   <ItemGroup>
