@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using Utils;
 using System.Net.Http;
+using javax.jws;
+using com.sun.corba.se.impl.protocol.giopmsgheaders;
+using javax.xml.crypto;
 
 namespace Management.Controllers
 {
@@ -18,12 +21,14 @@ namespace Management.Controllers
         private readonly ILogger<HomeController> _logger;
         private static IWebHostEnvironment _hostingEnvironment;
         private static Config _config;
-        private readonly IHttpClientFactory _clientFactory;
+        static readonly HttpClient client = new HttpClient();
 
         public HomeController(ILogger<HomeController> logger, IWebHostEnvironment hostEnvironment)
         {
             _logger = logger;
             _hostingEnvironment = hostEnvironment;
+
+            _config = Utils.Utils.ReadConfiguration();
         }
 
         public IActionResult Index()
@@ -42,46 +47,42 @@ namespace Management.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        //public string CheckAll()
-        //{
-        //    string status = "";
-        //    foreach (Modulo m in _config.Monitoring.Modules)
-        //        status += CheckAvailability(m);
+        public async Task<string> GetTiming()
+        {
+            return _config.Monitoring.Timing.ToString();
+        }
 
-        //    // rimuoviamo l'ultimo ";"
-        //    return status.Remove(status.Length - 1, 1);
-        //}
+        public async Task<string> CheckAll()
+        {
+            string status = "";
+            foreach (Modulo m in _config.Monitoring.Modules)
+                status += CheckAvailability(m).Result;
 
-     
-        //public async string CheckAvailability(Modulo modulo)
-        //{
-        //    var path = Path.Combine(_hostingEnvironment.WebRootPath, "config.json");
+            // rimuoviamo l'ultimo ";"
+            return status.Remove(status.Length - 1, 1);
+        }
 
-        //    // creiamo il client che contatterà il modulo esterno
-        //    var client = _clientFactory.CreateClient();
 
-        //    // prepariamo la risposta
-        //    var request = new HttpRequestMessage(HttpMethod.Get,
-        //    $"http://{modulo.Ip}:{modulo.Port}");
-        //    request.Headers.Add("Accept", "application/vnd.github.v3+json");
-        //    request.Headers.Add("User-Agent", "HttpClientFactory-Sample");
-            
-        //    // inviamo la richiesta
-        //    var response = await client.SendAsync(request);
+        public static async Task<string> CheckAvailability(Modulo modulo)
+        {
+            var path = Path.Combine(_hostingEnvironment.WebRootPath, "config.json");
+            try
+            {
+                // prepariamo e inviamo la richiesta
+                string uri = $"http://{modulo.Ip}:{modulo.Port}/";
 
-        //    // analizziamo la risposta
-        //    try
-        //    {
-        //        if (response.IsSuccessStatusCode)
-        //            return $"{modulo.Name}:1;";
-        //        else
-        //            return $"{modulo.Name}:0;";        
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return $"{modulo.Name}:0;";
-        //    }
+                string response = await client.GetStringAsync(uri);
 
-        //}
+                // analizziamo la risposta
+                if (response != null)
+                    return $"{modulo.Name}:1;";
+                else
+                    return $"{modulo.Name}:0;";
+            }
+            catch (HttpRequestException ex)
+            {
+                return $"{modulo.Name}:0;";
+            }
+        }
     }
 }

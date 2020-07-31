@@ -36,44 +36,40 @@
     "Ip": "10.0.0.73",
     "Port": 8086
   },
-  "Monitoring": {
-    "Modules": [
-        {
-          "Name": "Alerting",
-          "Ip": "127.0.0.1",
-          "Port": 15000,
-          "Timing": 10
-        },
-        {
-          "Name": "Database",
-          "Ip": "127.0.0.1",
-          "Port": 15001,
-          "Timing": 10
-        },
-        {
-          "Name": "Hub",
-          "Ip": "127.0.0.1",
-          "Port": 15002,
-          "Timing": 10
-        },
-        {
-          "Name": "Grafana",
-          "Ip": "10.0.0.73",
-          "Port": 3000,
-          "Timing": 10
-        },
-        {
-          "Name": "Nodered",
-          "Ip": "127.0.0.1",
-          "Port": 1880,
-          "Timing": 10
-        },
-        {
-          "Name": "RabbitMQ",
-          "Ip": "10.0.0.73",
-          "Port": 15672,
-          "Timing": 10
-        }
-      ]
-  }
+    "Monitoring": {
+        "Timing": 10,
+        "Modules": [
+            {
+                "Name": "Alerting",
+                "Ip": "127.0.0.1",
+                "Port": 15000
+
+            },
+            {
+                "Name": "Database",
+                "Ip": "127.0.0.1",
+                "Port": 15001
+            },
+            {
+                "Name": "Hub",
+                "Ip": "127.0.0.1",
+                "Port": 15002
+            },
+            {
+                "Name": "Grafana",
+                "Ip": "10.0.0.73",
+                "Port": 3000
+            },
+            {
+                "Name": "Nodered",
+                "Ip": "127.0.0.1",
+                "Port": 1880
+            },
+            {
+                "Name": "RabbitMQ",
+                "Ip": "10.0.0.73",
+                "Port": 15672
+            }
+        ]
+    }
 }

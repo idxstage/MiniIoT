@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="IKVM" Version="8.1.5717" />
     <PackageReference Include="MongoDB.Driver" Version="2.10.4" />
   </ItemGroup>
   <ItemGroup>
