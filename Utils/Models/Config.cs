@@ -20,12 +20,23 @@ namespace Utils
         public Communications Communications { get; set; }
 
         public Monitoring Monitoring { get; set; }
+
+        public MongoDB MongoDB { get; set; }
     }
     public class InfluxDB
     {
         public int Port { get; set; }
         public String Ip { get; set; }
-        
+        public string RetentionPolicy { get; set; }
+        public string Database { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+
+    }
+
+    public class MongoDB
+    {
+        public String ConnectionString { get; set; }
     }
     public class Alerting
     {

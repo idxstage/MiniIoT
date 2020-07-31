@@ -1,0 +1,149 @@
+﻿@{
+    ViewData["Title"] = "Rules management";
+}
+
+<style>
+    th.dt-center, td.dt-center {
+        text-align: center;
+    }
+</style>
+
+<link href="~/lib/DataTables/datatables.css" rel="stylesheet" />
+<div class="text-center">
+    <h1 class="display-4">Gestione delle rules</h1>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary card-outline mt-3">
+                    <div class="card-header">
+                        <button class="btn btn-primary float-right" id="newRule">NUOVA RULE</button>
+                    </div>
+                    <div class="card-body">
+                        <table id="rules" class="table table-sm table-hover responsive" style="width: 100%">
+                            <thead>
+                            @*<th>Id</th>*@
+                            <th>Name</th>
+                            <th>Machine</th>
+                            <th>Severity</th>
+                            <th>Frequency</th>
+                            <th>Period</th>
+                            <th>Field</th>
+                            <th>ConditionOperator</th>
+                            <th>Value</th>
+                            @*<th>Actions</th>*@
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="modal_container"></div>
+
+
+@section Scripts {
+    <script src="~/lib/DataTables/datatables.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            //apertura form modale
+            $("body").on("click", "#newRule", function () {
+                    $("#modal_container").empty();
+                    $.get("@Url.Action("Modal","Rules")", function (data) {
+                        $("#modal_container").append(data);
+                        $("#modal").modal("show");
+                    });
+            });
+
+
+
+            var table = $('#rules').DataTable({
+                searching: true,
+                ordering: true,
+                autoWidth: true,
+                processing: true,
+                serverSide: true,
+                paging: true,
+                select: false,
+                ajax: {
+                    url: "/rules/LoadRules",
+                    type: "POST"
+                },
+                language: {
+                    url: "/../../dist/language/Italian.json"
+                },
+                columns: [
+
+                    //{
+                    //    "data": "id",
+                    //    "name": "Id",
+                    //    "autoWidth": true,
+                    //    defaultContent: ""
+                    //},
+                    {
+                        "data": "name",
+                        "name": "Name",
+                        "autoWidth": true,
+                        defaultContent: ""
+
+                    },
+                    {
+                        "data": "machine",
+                        "name": "Machine",
+                        "autoWidth": true,
+                        "render": function (data, type, row) {
+                            //TODO
+                            return data;
+                        },
+                        defaultContent: ""
+                    },
+                    {
+                        "data": "severity",
+                        "name": "Severity",
+                        "autoWidth": true,
+                        defaultContent: ""
+
+                    },
+                    {
+                        "data": "frequency",
+                        "name": "Frequency",
+                        "autoWidth": true,
+                        defaultContent: ""
+
+                    },
+                    {
+                        "data": "period",
+                        "name": "Period",
+                        "autoWidth": true,
+                        defaultContent: ""
+                    },
+                    {
+                        "data": "field",
+                        "name": "Field",
+                        "autoWidth": true,
+                        defaultContent: ""
+                    },
+                    {
+                        "data": "conditionOperator",
+                        "name": "ConditionOperator",
+                        "autoWidth": true,
+                        defaultContent: ""
+                    },
+                    {
+                        "data": "value",
+                        "name": "Value",
+                        "autoWidth": true,
+                        defaultContent: ""
+                    }
+                ]
+            });
+        });
+    </script>
+}
+
+

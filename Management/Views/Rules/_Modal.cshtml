@@ -1,0 +1,183 @@
+﻿@model Management.Models.Rule
+
+<style>
+    .modal-dialog {
+        width: auto;
+        max-width: 750px;
+    }
+
+    .border-right {
+        border-right: 1px solid black;
+    }
+</style>
+
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="edit_file_modal_title">
+                    Inserimento nuova rule
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            @using (Html.BeginForm("InsertRule", "Rules", FormMethod.Post, new { id = "submitForm" }))
+            {
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6 ml-auto border-right">
+                                <div class="form-group">
+                                    <label class="col-form-label" asp-for="Name"></label>
+                                    <input asp-for="Name" class="form-control input-sm" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-form-label" asp-for="Machine"></label>
+                                    <input asp-for="Machine" class="form-control input-sm" />
+                                    <span asp-validation-for="Machine" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-form-label" asp-for="Severity"></label>
+                                    <input asp-for="Severity" class="form-control input-sm" />
+                                    <span asp-validation-for="Severity" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-form-label" asp-for="Frequency"></label>
+                                    <input asp-for="Frequency" class="form-control input-sm" />
+                                    <span asp-validation-for="Frequency" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-form-label" asp-for="Period"></label>
+                                    <input asp-for="Period" class="form-control input-sm" />
+                                    <span asp-validation-for="Period" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-form-label" asp-for="Field"></label>
+                                    <input asp-for="Field" class="form-control input-sm" />
+                                    <span asp-validation-for="Field" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-form-label" asp-for="ConditionOperator"></label>
+                                    <input asp-for="ConditionOperator" class="form-control input-sm" />
+                                    <span asp-validation-for="ConditionOperator" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-form-label" asp-for="Value"></label>
+                                    <input asp-for="Value" class="form-control input-sm" />
+                                    <span asp-validation-for="Value" class="text-danger"></span>
+                                </div>                                
+                            </div>
+                            <div class="col-md-6 ml-auto">                          
+                                <fieldset class="form-group">
+                                    <legend>Inserimento actions</legend>
+                                    <div class="form-group">
+                                        <label class="col-form-label" for="type">Type</label>
+                                        <input type="text" id="type" class="form-control action_input input-sm" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-form-label" for="address">Address</label>
+                                        <input type="text" id="address" class="form-control action_input input-sm" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-form-label" for="body">Body</label>
+                                        <textarea id="body" class="form-control action_input input-sm" />
+                                    </div>
+                                    <div class="form-group">
+                                        <table id="actions" class="table table-bordered">
+                                            <thead>
+                                            <th>type</th>
+                                            <th>address</th>
+                                            <th>body</th>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-sm" id="nuovaAction">Aggiungi action</button>
+                                </fieldset>
+                            </div>
+                           
+                        </div>
+                    </div>
+                    @Html.AntiForgeryToken();
+                </div>
+                <div class="modal-footer">
+                    <input type="submit" class="btn btn-primary" value="Inserisci">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Chiudi</button>
+
+                </div>
+            }
+
+
+        </div>
+    </div>
+</div>
+@await Html.PartialAsync("_ValidationScriptsPartial")
+<script>
+
+
+
+    $(document).ready(function () {
+
+        //inserimento rule nella tabella
+        $("#nuovaAction").on("click", function () {
+            var type = $("#type").val();
+            var address = $("#address").val();
+            var body = $("#body").val();
+            $('#actions tbody').append(`<tr><td>${type}</td><td>${address}</td><td>${body}</td></tr>`);
+            $('.action_input').val('');
+        });
+
+        $('#submitForm').submit(function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var valid = $('#submitForm').valid();
+            if (valid) {
+                var formdata = $("form").serializeArray();
+                var data = {};
+                $(formdata).each(function (index, obj) {
+                    data[obj.name] = obj.value;
+                });
+
+                data['actions'] = [];
+
+                $('#actions tbody').find('tr').each(function () {
+                    var obj = {};
+                    $(this).find('td').each(function () {
+                        var th = $('#actions th').eq($(this).index());
+                        var key = th.text();
+                        var value = $(this).text();
+                        obj[key] = value;
+                    });                  
+                    data['actions'].push(obj);  
+                });
+                console.log(data);
+               
+
+                $.post(this.action, data)
+                    .done(function (data) {
+                        if (data.result) {
+                            $("#modal").modal("hide");
+                            $("#modal_container").empty();
+                            $('.modal-backdrop').remove();
+                            alert("Rule inserita con successo nel database!");
+                        }
+
+
+                    }).fail(function (data) {
+
+
+                    });
+
+            }
+
+
+        });
+    });
+
+
+</script>

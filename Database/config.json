@@ -34,7 +34,11 @@
   },
   "InfluxDB": {
     "Ip": "10.0.0.73",
-    "Port": 8086
+    "Port": 8086,
+    "Database": "TELEMETRIE",
+    "RetentionPolicy": "autogen",
+    "Username": "IoT",
+    "Password": "Soluzioni.2020"
   },
   "Monitoring": {
     "Modules": [

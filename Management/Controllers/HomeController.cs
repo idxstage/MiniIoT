@@ -42,46 +42,46 @@ namespace Management.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public string CheckAll()
-        {
-            string status = "";
-            foreach (Modulo m in _config.Monitoring.Modules)
-                status += CheckAvailability(m);
+        //public string CheckAll()
+        //{
+        //    string status = "";
+        //    foreach (Modulo m in _config.Monitoring.Modules)
+        //        status += CheckAvailability(m);
 
-            // rimuoviamo l'ultimo ";"
-            return status.Remove(status.Length - 1, 1);
-        }
+        //    // rimuoviamo l'ultimo ";"
+        //    return status.Remove(status.Length - 1, 1);
+        //}
 
      
-        public async string CheckAvailability(Modulo modulo)
-        {
-            var path = Path.Combine(_hostingEnvironment.WebRootPath, "config.json");
+        //public async string CheckAvailability(Modulo modulo)
+        //{
+        //    var path = Path.Combine(_hostingEnvironment.WebRootPath, "config.json");
 
-            // creiamo il client che contatterà il modulo esterno
-            var client = _clientFactory.CreateClient();
+        //    // creiamo il client che contatterà il modulo esterno
+        //    var client = _clientFactory.CreateClient();
 
-            // prepariamo la risposta
-            var request = new HttpRequestMessage(HttpMethod.Get,
-            $"http://{modulo.Ip}:{modulo.Port}");
-            request.Headers.Add("Accept", "application/vnd.github.v3+json");
-            request.Headers.Add("User-Agent", "HttpClientFactory-Sample");
+        //    // prepariamo la risposta
+        //    var request = new HttpRequestMessage(HttpMethod.Get,
+        //    $"http://{modulo.Ip}:{modulo.Port}");
+        //    request.Headers.Add("Accept", "application/vnd.github.v3+json");
+        //    request.Headers.Add("User-Agent", "HttpClientFactory-Sample");
             
-            // inviamo la richiesta
-            var response = await client.SendAsync(request);
+        //    // inviamo la richiesta
+        //    var response = await client.SendAsync(request);
 
-            // analizziamo la risposta
-            try
-            {
-                if (response.IsSuccessStatusCode)
-                    return $"{modulo.Name}:1;";
-                else
-                    return $"{modulo.Name}:0;";        
-            }
-            catch (Exception e)
-            {
-                return $"{modulo.Name}:0;";
-            }
+        //    // analizziamo la risposta
+        //    try
+        //    {
+        //        if (response.IsSuccessStatusCode)
+        //            return $"{modulo.Name}:1;";
+        //        else
+        //            return $"{modulo.Name}:0;";        
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return $"{modulo.Name}:0;";
+        //    }
 
-        }
+        //}
     }
 }
