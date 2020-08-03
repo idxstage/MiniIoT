@@ -16,7 +16,7 @@
             "Password": "Soluzioni.2020",
             "VirtualHost": "/",
             "Exchange": "direct_message",
-            "Queue": "alerting"
+            "Queue": "hub"
 
         },
         "Email": {

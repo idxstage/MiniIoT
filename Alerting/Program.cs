@@ -136,12 +136,9 @@ namespace Alerting
                     await Task.Run(() =>
                     {
                         Console.WriteLine("Risposta: " + message.Data);
-
                         var result = JsonConvert.DeserializeObject<QueryResult>(message.Data);
 
-
                         List<Dictionary<string, string>> telemetrie = new List<Dictionary<string, string>>();
-
                         telemetrie = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(result.Payload);
 
 
@@ -248,7 +245,6 @@ namespace Alerting
                     string b = $"{m};{regola.Period};{regola.Field}";
                     // il task sia avvia subito e con una certa frequenza definita da regola.Frequency
                     Timer t = new Timer(RequestQuery, b, 0, (int)regola.Frequency * 1000);
-
                     listaThread.Add(t);
                 }
             }
@@ -311,14 +307,12 @@ namespace Alerting
 
             if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
             {
-                var rules = await GetRulesFromDB(machine);
-                while (await rules.MoveNextAsync())
-                {
-                    //1 batch di documenti
-                    var batch = rules.Current;
+                    var rules = await GetRulesFromDB(machine);
+                
+                    
 
                     //per ogni rule nel batch
-                    foreach (var r in batch)
+                    foreach (var r in rules)
                     {
                         if (r.Machine.Contains(machine)) // applichiamo la regola a quella macchina
                         {
@@ -371,16 +365,16 @@ namespace Alerting
                             }
                         }
                     }
-                }
+                
             }
         }
         #endregion
 
 
 
-        private static async Task<IAsyncCursor<Rule>> GetRulesFromDB(String id)
+        private static async Task<List<Rule>> GetRulesFromDB(String id)
         {
-            return await _rulesCollection.FindAsync(r => r.Id == id);
+            return await _rulesCollection.Find(r => r.Id == id).ToListAsync();
         }
 
         private async static void CheckRules(Dictionary<string, string> campiTele)
@@ -392,14 +386,10 @@ namespace Alerting
 
             if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
             {
-                var rules = await GetRulesFromDB(machine);
-                while (await rules.MoveNextAsync())
-                {
-                    //1 batch di documenti
-                    var batch = rules.Current;
-
+                    var rules = await GetRulesFromDB(machine);
+                
                     //per ogni rule nel batch
-                    foreach (var r in batch)
+                    foreach (var r in rules)
                     {
                         if (r.Machine.Contains(machine)) // applichiamo la regola a quella macchina
                         {
@@ -456,7 +446,7 @@ namespace Alerting
 
                         }
                     }
-                }
+                
 
 
             }
