@@ -37,7 +37,7 @@ namespace Alerting
         private static IMongoClient _client;
         private static IMongoDatabase _database;
         private static IMongoCollection<Rule> _rulesCollection;
-
+        private static readonly ILog log = LogManager.GetLogger(typeof(Program));
 
         static void Main(string[] args)
         {
@@ -196,14 +196,17 @@ namespace Alerting
                         // media
                         media.Add("machine_id", result.MachineId);
                         media.Add(indici[i], med.ToString());
+                        media.Add("type_telemetry", "Average");
 
                         // min 
                         min.Add("machine_id", result.MachineId);
                         min.Add(indici[i], m.ToString());
+                        min.Add("type_telemetry", "Minimun");
 
                         // max
                         max.Add("machine_id", result.MachineId);
                         max.Add(indici[i], M.ToString());
+                        max.Add("type_telemetry", "Maximum");
 
                         // controllo regole
                         CheckRules(media);
@@ -266,20 +269,29 @@ namespace Alerting
 
         private static Dictionary<string, string> SmontaTelemetria(string telemetria)
         {
-            telemetria = telemetria.Replace("{", "").Replace("}", "").Trim(); // rimuoviamo le graffe e spazi vari 
-            Dictionary<string, string> campiTele = new Dictionary<string, string>();
-
-            string[] variabili = telemetria.Split(','); // separiamo le variabili e i valori
-            foreach (string s in variabili) // puliamo le stringhe
+            try
             {
-                string k = s.Split(":")[0].Trim();
-                k = k.Replace("\\", "").Replace("\"", "");
-                string value = s.Split(":")[1].Trim();
-                value = value.Replace("\\", "").Replace("\"", "");
-                campiTele.Add(k, value);
-            }
+                telemetria = telemetria.Replace("{", "").Replace("}", "").Trim(); // rimuoviamo le graffe e spazi vari 
+                Dictionary<string, string> campiTele = new Dictionary<string, string>();
 
-            return campiTele;
+                string[] variabili = telemetria.Split(','); // separiamo le variabili e i valori
+                foreach (string s in variabili) // puliamo le stringhe
+                {
+                    string k = s.Split(":")[0].Trim();
+                    k = k.Replace("\\", "").Replace("\"", "");
+                    string value = s.Split(":")[1].Trim();
+                    value = value.Replace("\\", "").Replace("\"", "");
+                    campiTele.Add(k, value);
+                }
+
+                return campiTele;
+            }
+            catch(Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+                return null;
+            }
+            
         }
 
 
@@ -327,9 +339,6 @@ namespace Alerting
                                     if (!campiTele.TryAdd("type_telemetry", "Instant"))
                                         campiTele["type_telemetry"] = "Instant";
                                 }
-                                else
-                                    if (!campiTele.TryAdd("type_telemetry", "Average"))
-                                    campiTele["type_telemetry"] = "Average";
 
 
                                 switch (r.ConditionOperator)
@@ -362,12 +371,7 @@ namespace Alerting
                             }
                         }
                     }
-
-
                 }
-
-
-
             }
         }
         #endregion
@@ -381,9 +385,6 @@ namespace Alerting
 
         private async static void CheckRules(Dictionary<string, string> campiTele)
         {
-
-
-
             #region Controllo Telemetria
 
             string machine;

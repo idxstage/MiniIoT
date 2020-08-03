@@ -87,7 +87,6 @@ namespace Utils
             catch (Exception e)
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
-        
             }
            
         }

@@ -81,7 +81,6 @@ namespace Database
             {
                 PingServer server = new PingServer(ip, port);
             });
-
         }
     }
 }
