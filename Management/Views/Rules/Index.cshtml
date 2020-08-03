@@ -6,9 +6,59 @@
     th.dt-center, td.dt-center {
         text-align: center;
     }
+
+    tr {
+        font-size: 90%;
+        padding: .0.75rem;
+    }
+
+    td {
+        padding: 0px;
+    }
+
+    .label {
+        display: inline;
+        padding: .2em .6em .3em;
+        font-size: 75%;
+        font-weight: 700;
+        line-height: 2;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: .25em;
+    }
+
+    table.dataTable tbody tr.selected {
+        background-color: rgba(0,0,0,.075);
+        color: #212529;
+    }
+
+    .label-info {
+        background-color: #d9534f;
+    }
+
+    .bootstrap-tagsinput {
+        width: 100%;
+        line-height: 25px;
+    }
+
+    div.dts tbody td {
+        vertical-align: middle;
+    }
+
+    div.dts div.dataTables_scrollBody {
+        background: none !important;
+    }
+
+    .dataTables_scrollHeadInner, .table {
+        width: 100% !important;
+    }
 </style>
 
 <link href="~/lib/DataTables/datatables.css" rel="stylesheet" />
+<link href="~/lib/bootstrap-tagsinput-latest/src/bootstrap-tagsinput.css" rel="stylesheet" />
+<link href="~/lib/sweetalert2/sweetalert2.css" rel="stylesheet" />
 <div class="text-center">
     <h1 class="display-4">Gestione delle rules</h1>
 </div>
@@ -24,7 +74,7 @@
                     <div class="card-body">
                         <table id="rules" class="table table-sm table-hover responsive" style="width: 100%">
                             <thead>
-                            @*<th>Id</th>*@
+                                @*<th>Id</th>*@
                             <th>Name</th>
                             <th>Machine</th>
                             <th>Severity</th>
@@ -33,7 +83,7 @@
                             <th>Field</th>
                             <th>ConditionOperator</th>
                             <th>Value</th>
-                            @*<th>Actions</th>*@
+                            <th></th>
                             </thead>
                         </table>
                     </div>
@@ -48,17 +98,211 @@
 
 @section Scripts {
     <script src="~/lib/DataTables/datatables.js"></script>
+    <script src="~/lib/bootstrap-tagsinput-latest/src/bootstrap-tagsinput.js"></script>
+    <script src="~/lib/sweetalert2/sweetalert2.js"></script>
+
+
+
     <script>
         $(document).ready(function () {
 
             //apertura form modale
             $("body").on("click", "#newRule", function () {
                     $("#modal_container").empty();
-                    $.get("@Url.Action("Modal","Rules")", function (data) {
+                    $.get("@Url.Action("Modal","Rules", new { mode = "add" })", function (data) {
                         $("#modal_container").append(data);
                         $("#modal").modal("show");
+                        $("#machine").tagsinput();
                     });
             });
+
+            $("body").on("click", ".editRule", function () {
+                var data = table.row($(this).closest('tr')).data();
+                var _id = data.id;
+                $("#modal_container").empty();
+                    $.get("@Url.Action("Modal","Rules")" + "?mode=" + "edit&id=" + _id, function (data) {
+                        $("#modal_container").append(data);
+                        $("#modal").modal("show");
+                        $("#machine").tagsinput();
+                    });
+            });
+
+
+
+
+
+
+               $("body").on("click", ".deleteRule", function () {
+	            var data = table.row($(this).closest('tr')).data();
+	            var _id = data.id;
+	            Swal.fire({
+		            title: 'Eliminazione regola',
+		            text: "Sei sicuro di eliminare la regola selezionata?",
+		            icon: 'warning',
+		            showCancelButton: true,
+		            confirmButtonColor: '#3085d6',
+		            cancelButtonColor: '#d33',
+		            confirmButtonText: 'Conferma eliminazione!'
+	            }).then((result) => {
+		            if (result.value) {
+			            //eliminazione, connessione al server
+			            $.get("@Url.Action("DeleteRule", "Rules")" + "?id=" + _id).done(function (data) {
+					            if (data.result) {
+						            Swal.fire({
+							            type: 'success',
+							            title: 'Regola eliminata con successo!'
+						            });
+						            //reload tabella
+						            $('#rules').DataTable().ajax.reload();
+					            }
+				            }).fail(function (data) {
+					            Swal.fire({
+						            type: 'error',
+						            title: 'Impossibile completare l\'operazione! Riprova più tardi.'
+					            });
+				            });
+		            }
+	            })
+            });
+
+
+            $('body').on('keyup keypress', "#submitForm", function (e) {
+                var keyCode = e.keyCode || e.which;
+                if (keyCode === 13) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+
+        function serializeForm() {
+            var formdata = $("form").serializeArray();
+            var data = {};
+
+            //serialize actions
+
+            $(formdata).each(function (index, obj) {
+                data[obj.name] = obj.value;
+            });
+
+            data['actions'] = [];
+            $('#actions tbody').find('tr').each(function () {
+                var obj = {};
+                $(this).find('td').each(function () {
+                    var th = $('#actions th').eq($(this).index());
+                    if (th != "actions") {
+                        var key = th.text();
+                        var value = $(this).text();
+                        obj[key] = value;
+                    }
+                });
+                data['actions'].push(obj);
+            });
+
+            //serialize machine
+
+            var machine = $("#machine").tagsinput('items');
+            data['Machine'] = machine;
+            return data;
+        }
+
+        $("body").on("click", ".btnDeleteRow", function () {
+            $(this).closest('tr').remove();
+        });
+
+        $("body").on("click", "#edit_rule", function () {
+            //abilito elementi
+            $(".rule_input").prop("disabled", false)
+            //nascondi pulsante Modifica
+            $("#edit_rule").prop("hidden", true);
+            //mostro pulsante Conferma
+            $("#confirm_edit").prop("hidden", false);
+        });
+
+            $("body").on("click", "#confirm_edit", function () {
+                var valid = $('#submitForm').valid();
+                if (valid) {
+
+
+                    var data = serializeForm();
+
+
+                    $.post("@Url.Action("UpdateRule","Rules")", data)
+                        .done(function (data) {
+                            if (data.result) {
+
+                                //modificato con successo, disabilito elementi
+                                $(".rule_input").prop("disabled", true)
+                                //nascondi pulsante Modifica
+                                $("#edit_rule").prop("hidden", false);
+                                //mostro pulsante Conferma
+                                $("#confirm_edit").prop("hidden", true);
+                                Swal.fire({
+                                    type: 'success',
+                                    title: 'Rule modificata correttamente!'
+                                });
+                                //reload elementi tabella
+                                $('#rules').DataTable().ajax.reload();
+                            }
+
+
+                        }).fail(function (data) {
+
+
+                        });
+                }
+            });
+
+
+
+     
+        //inserimento rule nella tabella
+        $("body").on("click","#nuovaAction", function () {
+
+            var type = $("#type").find(":selected").text();;
+            var address = $("#address").val();
+            var body = $("#body").val();
+
+            if (!type || !address)
+                 return;
+
+            $('#actions tbody').append(`<tr><td>${type}</td><td>${address}</td><td>${body}</td><td><button class="btnDeleteRow btn btn-outline-danger btn-sm">Delete</button></td></tr>`);
+            $('.action_input').val('');
+
+        });
+
+            $('body').on("submit", "#submitForm", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var valid = $('#submitForm').valid();
+            if (valid) {
+
+                var data = serializeForm();
+
+                $.post(this.action, data)
+                    .done(function (data) {
+                        if (data.result) {
+                            $("#modal").modal("hide");
+                            $("#modal_container").empty();
+                            $('.modal-backdrop').remove();
+                            Swal.fire({
+                                type: 'success',
+                                title: 'Rule inserita con successo nel database!'
+                            });
+                            //reload tabella
+                            $('#rules').DataTable().ajax.reload();
+                        }
+
+
+                    }).fail(function (data) {
+
+
+                    });
+
+            }
+
+
+        });
 
 
 
@@ -139,6 +383,12 @@
                         "name": "Value",
                         "autoWidth": true,
                         defaultContent: ""
+                    },
+                    {
+                        "autoWidth": true,
+                        defaultContent: '<div class="btn-group">\
+                                             <button class= "btn btn-outline-primary btn-sm mr-1 editRule" >Modifica</button> \
+                                             <button class="btn btn-outline-danger btn-sm deleteRule">Elimina</button></div >'
                     }
                 ]
             });

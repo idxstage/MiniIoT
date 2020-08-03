@@ -10,6 +10,7 @@ using Utils;
 using Management.Models;
 using Alerting.Model;
 using FileM.Models;
+using com.sun.org.apache.xpath.@internal.axes;
 
 namespace Management.Controllers
 {
@@ -37,9 +38,20 @@ namespace Management.Controllers
         }
 
 
-        public async Task<IActionResult> Modal()
+        public async Task<IActionResult> Modal(String mode, String id)
         {
-            return PartialView("_Modal");
+            if (mode.Equals("add"))
+            {
+                ViewBag.mode = "add";
+                return PartialView("_Modal");
+            }
+            else
+            {
+                ViewBag.mode = "edit";
+                var rule = await _rulesCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
+                return PartialView("_Modal", rule);
+            }
+           
         }
 
 
@@ -80,6 +92,39 @@ namespace Management.Controllers
             await _rulesCollection.InsertOneAsync(rule);
             return Json(new { result = true });
         }
+
+        
+        public async Task<JsonResult> UpdateRule(Models.Rule rule)
+        {
+
+            var result = await _rulesCollection.UpdateOneAsync(r => r.Id == rule.Id, Builders<Models.Rule>.Update
+                                                                                                            .Set(r => r.Machine, rule.Machine)
+                                                                                                            .Set(r => r.Name, rule.Name)
+                                                                                                            .Set(r => r.Period, rule.Period)
+                                                                                                            .Set(r => r.Frequency, rule.Frequency)
+                                                                                                            .Set(r => r.Severity, rule.Severity)
+                                                                                                            .Set(r => r.Field, rule.Field)
+                                                                                                            .Set(r => r.ConditionOperator, rule.ConditionOperator)
+                                                                                                            .Set(r => r.Value, rule.Value)
+                                                                                                            .Set(r => r.actions, rule.actions));
+
+            if (result.IsAcknowledged && result.ModifiedCount > 0)
+                return Json(new { result = true });
+            else
+                return Json(new { result = false });
+
+        }
+
+        public async Task<JsonResult> DeleteRule(String id)
+        {
+
+            var result = await _rulesCollection.DeleteOneAsync(r => r.Id == id);
+            if (result.IsAcknowledged && result.DeletedCount > 0)            
+                return Json(new { result = true });           
+            else
+                return Json(new { result = false });
+        }
+
 
     }
 }

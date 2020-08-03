@@ -1,5 +1,27 @@
-﻿@model Management.Models.Rule
+﻿@using Microsoft.AspNetCore.Mvc.Rendering; 
+@model Management.Models.Rule
+@{ 
+    var mode = ViewBag.mode;
+    List<SelectListItem> operatori = new List<SelectListItem>();
+    operatori.Add(new SelectListItem("<", "<"));
+    operatori.Add(new SelectListItem(">", ">"));
+    operatori.Add(new SelectListItem("=", "="));
+    operatori.Add(new SelectListItem("!=", "!="));
 
+    List<SelectListItem> azioni = new List<SelectListItem>();
+    azioni.Add(new SelectListItem("EMAIL", "EMAIL"));
+    azioni.Add(new SelectListItem("EMAIL", "EMAIL"));
+
+    List<SelectListItem> severity = new List<SelectListItem>();
+    severity.Add(new SelectListItem("CRITICAL", "CRITICAL"));
+    severity.Add(new SelectListItem("ALARM", "ALARM"));
+    severity.Add(new SelectListItem("INFO", "INFO"));
+
+
+    bool edit = false;
+    if (mode == "edit") edit = true;
+
+}
 <style>
     .modal-dialog {
         width: auto;
@@ -15,9 +37,20 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="edit_file_modal_title">
-                    Inserimento nuova rule
-                </h4>
+
+                @{
+                    if (edit)
+                    {
+                        <h4 class="modal-title">Modifica regola</h4>
+
+                    }
+                    else
+                    {
+                        <h4 class="modal-title">Inserisci nuova regola</h4>
+                    }
+                }
+
+
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -28,76 +61,112 @@
                 <div class="modal-body">
                     <div class="container-fluid">
                         <div class="row">
-                            <div class="col-md-6 ml-auto border-right">
+                            <div class="col-md-4 ml-auto border-right">
                                 <div class="form-group">
                                     <label class="col-form-label" asp-for="Name"></label>
-                                    <input asp-for="Name" class="form-control input-sm" />
+                                    <input asp-for="Name" class="form-control input-sm rule_input" />
                                     <span asp-validation-for="Name" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-form-label" asp-for="Machine"></label>
-                                    <input asp-for="Machine" class="form-control input-sm" />
-                                    <span asp-validation-for="Machine" class="text-danger"></span>
-                                </div>
+                                    <label for="Machine" class="col-form-label">Machine</label>
+                                    <select multiple data-role="tagsinput" name="Machine" id="machine" class="form-control rule_input">
+                                        @{
+                                            if (Model != null && Model.Machine.Count > 0)
+                                            {
+                                                foreach (var disp in Model.Machine)
+                                                {
+                                                    <option value="@disp">@disp</option>
+                                                }
+                                            }
+                                         }
+
+                                    </select>
+                                </div>                                
                                 <div class="form-group">
                                     <label class="col-form-label" asp-for="Severity"></label>
-                                    <input asp-for="Severity" class="form-control input-sm" />
+                                    @Html.DropDownListFor(m => m.Severity, severity, new { @class = "form-control input-sm rule_input" })
                                     <span asp-validation-for="Severity" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-form-label" asp-for="Frequency"></label>
-                                    <input asp-for="Frequency" class="form-control input-sm" />
+                                    <input asp-for="Frequency" class="form-control input-sm rule_input" />
                                     <span asp-validation-for="Frequency" class="text-danger"></span>
                                 </div>
 
                                 <div class="form-group">
                                     <label class="col-form-label" asp-for="Period"></label>
-                                    <input asp-for="Period" class="form-control input-sm" />
+                                    <input asp-for="Period" class="form-control input-sm rule_input" />
                                     <span asp-validation-for="Period" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-form-label" asp-for="Field"></label>
-                                    <input asp-for="Field" class="form-control input-sm" />
+                                    <input asp-for="Field" class="form-control input-sm rule_input" />
                                     <span asp-validation-for="Field" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-form-label" asp-for="ConditionOperator"></label>
-                                    <input asp-for="ConditionOperator" class="form-control input-sm" />
+                                    @Html.DropDownListFor(m => m.ConditionOperator, operatori, new { @class = "form-control input-sm rule_input" })
                                     <span asp-validation-for="ConditionOperator" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-form-label" asp-for="Value"></label>
-                                    <input asp-for="Value" class="form-control input-sm" />
+                                    <input asp-for="Value" class="form-control input-sm rule_input" />
                                     <span asp-validation-for="Value" class="text-danger"></span>
-                                </div>                                
+                                </div>
                             </div>
-                            <div class="col-md-6 ml-auto">                          
+                            <div class="col-md-8 ml-auto">                          
                                 <fieldset class="form-group">
                                     <legend>Inserimento actions</legend>
                                     <div class="form-group">
                                         <label class="col-form-label" for="type">Type</label>
-                                        <input type="text" id="type" class="form-control action_input input-sm" />
+                                        <select id="type" class="form-control input-sm rule_input">
+                                            <option>EMAIL</option>
+                                            <option>SLACK</option>
+                                        </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label" for="address">Address</label>
-                                        <input type="text" id="address" class="form-control action_input input-sm" />
+                                        <input type="text" id="address" class="form-control action_input input-sm rule_input" />
                                     </div>
                                     <div class="form-group">
                                         <label class="col-form-label" for="body">Body</label>
-                                        <textarea id="body" class="form-control action_input input-sm" />
+                                        <textarea id="body" class="form-control action_input input-sm rule_input" />
                                     </div>
-                                    <div class="form-group">
-                                        <table id="actions" class="table table-bordered">
+                                    <button type="button" class="btn btn-primary btn-sm rule_input" id="nuovaAction">Aggiungi action</button>
+                                    <input type="hidden" asp-for="Id" />
+                                    <hr />
+                                    <div class="container">
+                                        <table id="actions" class="table table-responsive w-100">
                                             <thead>
-                                            <th>type</th>
-                                            <th>address</th>
-                                            <th>body</th>
+                                                <tr>
+                                                    <th>type</th>
+                                                    <th>address</th>
+                                                    <th>body</th>
+                                                    <th>actions</th>
+                                                </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody class="text-truncate">
+                                                @{
+                                                    if (Model != null && Model.actions != null && Model.actions.Count > 0)
+                                                    {
+                                                        foreach (var action in Model.actions)
+                                                        {
+                                                            <tr>
+                                                                <td>@action.type</td>
+                                                                <td>@action.address</td>
+                                                                <td>@action.body</td>
+                                                                <td><button class="btnDeleteRow btn btn-outline-danger btn-sm">Delete</button></td>
+
+                                                            </tr>
+                                                        }
+                                                    }
+                                                }
+
+
                                             </tbody>
                                         </table>
                                     </div>
-                                    <button type="button" class="btn btn-primary btn-sm" id="nuovaAction">Aggiungi action</button>
+
                                 </fieldset>
                             </div>
                            
@@ -106,7 +175,21 @@
                     @Html.AntiForgeryToken();
                 </div>
                 <div class="modal-footer">
-                    <input type="submit" class="btn btn-primary" value="Inserisci">
+
+
+                    @{
+                        if (edit)
+                        {
+                            <button type="button" class="btn btn-primary" id="edit_rule">Modifica</button>
+                            <button type="button" class="btn btn-primary" hidden id="confirm_edit">Conferma modifiche</button>
+                        }
+                        else
+                        {
+                            <input type="submit" class="btn btn-primary" value="Inserisci">
+                        }
+
+                    }
+
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Chiudi</button>
 
                 </div>
@@ -123,60 +206,17 @@
 
     $(document).ready(function () {
 
-        //inserimento rule nella tabella
-        $("#nuovaAction").on("click", function () {
-            var type = $("#type").val();
-            var address = $("#address").val();
-            var body = $("#body").val();
-            $('#actions tbody').append(`<tr><td>${type}</td><td>${address}</td><td>${body}</td></tr>`);
-            $('.action_input').val('');
-        });
-
-        $('#submitForm').submit(function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var valid = $('#submitForm').valid();
-            if (valid) {
-                var formdata = $("form").serializeArray();
-                var data = {};
-                $(formdata).each(function (index, obj) {
-                    data[obj.name] = obj.value;
-                });
-
-                data['actions'] = [];
-
-                $('#actions tbody').find('tr').each(function () {
-                    var obj = {};
-                    $(this).find('td').each(function () {
-                        var th = $('#actions th').eq($(this).index());
-                        var key = th.text();
-                        var value = $(this).text();
-                        obj[key] = value;
-                    });                  
-                    data['actions'].push(obj);  
-                });
-                console.log(data);
-               
-
-                $.post(this.action, data)
-                    .done(function (data) {
-                        if (data.result) {
-                            $("#modal").modal("hide");
-                            $("#modal_container").empty();
-                            $('.modal-backdrop').remove();
-                            alert("Rule inserita con successo nel database!");
-                        }
-
-
-                    }).fail(function (data) {
-
-
-                    });
-
+        @{
+            if (edit)
+            {
+                 @:$(".rule_input").prop("disabled", true);
             }
 
 
-        });
+
+        }
+  
+
     });
 
 

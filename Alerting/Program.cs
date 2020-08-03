@@ -23,6 +23,8 @@ using InfluxDB.Client.Api.Domain;
 using Query = Utils.Query;
 using System.Linq;
 using System.Net.WebSockets;
+using MongoDB.Driver;
+
 
 namespace Alerting
 {
@@ -32,6 +34,11 @@ namespace Alerting
         private static ClientAMQP _amqpconn;
         private static Config _config;
         private static Semaphore _pool;
+        private static IMongoClient _client;
+        private static IMongoDatabase _database;
+        private static IMongoCollection<Rule> _rulesCollection;
+
+
         static void Main(string[] args)
         {
             _amqpconn = new ClientAMQP();
@@ -60,6 +67,10 @@ namespace Alerting
             _amqpconn.AMQPMessageReceived += OnAMQPMessageReceived;
             _amqpconn.ReceiveMessageAsync(queue);
 
+            //inizializzo connessione con MongoDB
+            _client = new MongoClient(_config.MongoDB.ConnectionString);
+            _database = _client.GetDatabase("MiniIoT");
+            _rulesCollection = _database.GetCollection<Rule>("Rules");
 
             _pool = new Semaphore(1, 1);
             var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
@@ -78,11 +89,11 @@ namespace Alerting
 
 
         public static async void GetTelemetryFromDB(string machineId, int period, string field)
-        {            
+        {
             var query = new Query();
             query.MachineId = machineId;
             query.Period = period;
-            query.Field = field; 
+            query.Field = field;
             var data = JsonConvert.SerializeObject(query);
             var request = new AMQPMessage();
             request.Sender = _config.Communications.AMQP.Queue;
@@ -99,7 +110,7 @@ namespace Alerting
             _amqpconn.CreateExchange(exchange, "direct");
 
             //creo coda database
-            _amqpconn.CreateQueue(queue);            
+            _amqpconn.CreateQueue(queue);
             //bind coda database a exchange e routing key 'database' 
             //riservato per le comunicazioni al modulo alerting (es. risposta query al modulo Dabase)
             _amqpconn.BindQueue(queue, exchange, "alerting");
@@ -119,63 +130,63 @@ namespace Alerting
                     {
                         CheckRules(message.Data);
                     });
-                    
+
                     break;
                 case AMQPMessageType.QueryResult:
                     await Task.Run(() =>
                     {
                         Console.WriteLine("Risposta: " + message.Data);
 
-                    var result = JsonConvert.DeserializeObject<QueryResult>(message.Data);
+                        var result = JsonConvert.DeserializeObject<QueryResult>(message.Data);
 
 
-                    List<Dictionary<string, string>> telemetrie = new List<Dictionary<string, string>>();
+                        List<Dictionary<string, string>> telemetrie = new List<Dictionary<string, string>>();
 
-                    telemetrie = JsonConvert.DeserializeObject<List<Dictionary<string,string>>>(result.Payload);
+                        telemetrie = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(result.Payload);
 
 
-                    double somma = 0;
-                    List<string> indici = null;
-                    List<string> valori = null;
-                    bool b = false;
-                    int i = -1;
-                    Dictionary<string, string> media = new Dictionary<string, string>();
-                    var k = telemetrie.GetEnumerator();
-                    while (k.MoveNext())
-                    {
-                        // otteniamo i campi della telemetria
-                        string field = null;
-                        indici = k.Current.Keys.ToList<string>();
-                        valori = k.Current.Values.ToList<string>();
-                        
-
-                        if (indici.IndexOf("ts") == 0)
+                        double somma = 0;
+                        List<string> indici = null;
+                        List<string> valori = null;
+                        bool b = false;
+                        int i = -1;
+                        Dictionary<string, string> media = new Dictionary<string, string>();
+                        var k = telemetrie.GetEnumerator();
+                        while (k.MoveNext())
                         {
-                            if (!b)
+                            // otteniamo i campi della telemetria
+                            string field = null;
+                            indici = k.Current.Keys.ToList<string>();
+                            valori = k.Current.Values.ToList<string>();
+
+
+                            if (indici.IndexOf("ts") == 0)
                             {
-                                b = true;
-                                i = 1;
+                                if (!b)
+                                {
+                                    b = true;
+                                    i = 1;
+                                }
+
+                                field = valori[1];
                             }
-                               
-                            field = valori[1];
-                        }
-                        else
-                        {
-                            if (!b)
+                            else
                             {
-                                b = true;
-                                i = 0;
+                                if (!b)
+                                {
+                                    b = true;
+                                    i = 0;
+                                }
+                                field = valori[0];
                             }
-                            field = valori[0];
+
+                            somma += Convert.ToDouble(field);
                         }
 
-                        somma += Convert.ToDouble(field);
-                    }
-
-                    double m = somma / telemetrie.Count;
-                    media.Add("machine_id", result.MachineId);
-                    media.Add(indici[i], m.ToString());
-                    CheckRules(media);
+                        double m = somma / telemetrie.Count;
+                        media.Add("machine_id", result.MachineId);
+                        media.Add(indici[i], m.ToString());
+                        CheckRules(media);
 
                     });
                     break;
@@ -231,7 +242,7 @@ namespace Alerting
             GetTelemetryFromDB(id, period, field);
         }
 
-        private static Dictionary<string,string> SmontaTelemetria(string telemetria)
+        private static Dictionary<string, string> SmontaTelemetria(string telemetria)
         {
             telemetria = telemetria.Replace("{", "").Replace("}", "").Trim(); // rimuoviamo le graffe e spazi vari 
             Dictionary<string, string> campiTele = new Dictionary<string, string>();
@@ -255,140 +266,176 @@ namespace Alerting
         /// </summary>
         /// <param name="telemetria"></param>
 
-        private static void CheckRules(string telemetria)
+        private async static void CheckRules(string telemetria)
         {
             Dictionary<string, string> campiTele = SmontaTelemetria(telemetria);
 
             #region Controllo Telemetria
-            foreach (Rule r in rules.rules)
+
+            string machine;
+            // controlliamo che la macchina sia contenuta all'interno della lista
+
+            if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
             {
-                string machine;
-                // controlliamo che la macchina sia contenuta all'interno della lista
-                ;
-                if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
+                var rules = await GetRulesFromDB(machine);
+                while (await rules.MoveNextAsync())
                 {
-                    if (r.Machine.Contains(machine)) // applichiamo la regola a quella macchina
+                    //1 batch di documenti
+                    var batch = rules.Current;
+
+                    //per ogni rule nel batch
+                    foreach (var r in batch)
                     {
-                        // controlliamo se qualche campo della telemetria è contenuta nelle regole
-                        if (campiTele.ContainsKey(r.Field))
+                        if (r.Machine.Contains(machine)) // applichiamo la regola a quella macchina
                         {
-                            // otteniamo il campo value
-                            string v;
-                            campiTele.TryGetValue(r.Field, out v);
-
-                            double value = Convert.ToDouble(v);
-                            double rValue = Convert.ToDouble(r.Value);
-
-                            value = Math.Round(value, 3);
-
-                            if (r.Period == null && r.Frequency == null) // made from instantanea
+                            // controlliamo se qualche campo della telemetria è contenuta nelle regole
+                            if (campiTele.ContainsKey(r.Field))
                             {
-                                if (!campiTele.TryAdd("type_telemetry", "Instant"))
-                                    campiTele["type_telemetry"] = "Instant";
-                            }
-                            else
-                                if (!campiTele.TryAdd("type_telemetry", "Average"))
-                                     campiTele["type_telemetry"] = "Average";
+                                // otteniamo il campo value
+                                string v;
+                                campiTele.TryGetValue(r.Field, out v);
+
+                                double value = Convert.ToDouble(v);
+                                double rValue = Convert.ToDouble(r.Value);
+
+                                value = Math.Round(value, 3);
+
+                                if (r.Period == null && r.Frequency == null) // made from instantanea
+                                {
+                                    if (!campiTele.TryAdd("type_telemetry", "Instant"))
+                                        campiTele["type_telemetry"] = "Instant";
+                                }
+                                else
+                                    if (!campiTele.TryAdd("type_telemetry", "Average"))
+                                    campiTele["type_telemetry"] = "Average";
 
 
-                            switch (r.ConditionOperator)
-                            {
-                                case ">=":
-                                    if (value >= rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case "<=":
-                                    if (value <= rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case ">":
-                                    if (value > rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case "<":
-                                    if (value < rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case "=":
-                                    if (value == rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case "!=":
-                                    if (value != rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
+                                switch (r.ConditionOperator)
+                                {
+                                    case ">=":
+                                        if (value >= rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case "<=":
+                                        if (value <= rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case ">":
+                                        if (value > rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case "<":
+                                        if (value < rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case "=":
+                                        if (value == rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case "!=":
+                                        if (value != rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                }
                             }
                         }
                     }
+
+
                 }
+
+
+
             }
-            #endregion
+        }
+        #endregion
+
+
+
+        private static async Task<IAsyncCursor<Rule>> GetRulesFromDB(String id)
+        {
+            return await _rulesCollection.FindAsync(r => r.Id == id);
         }
 
-        private static void CheckRules(Dictionary<string,string> campiTele)
+        private async static void CheckRules(Dictionary<string, string> campiTele)
         {
+
+
+
             #region Controllo Telemetria
-            foreach (Rule r in rules.rules)
+
+            string machine;
+            // controlliamo che la macchina sia contenuta all'interno della lista
+
+            if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
             {
-                string machine;
-                // controlliamo che la macchina sia contenuta all'interno della lista
-                
-                if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
+                var rules = await GetRulesFromDB(machine);
+                while (await rules.MoveNextAsync())
                 {
-                    if (r.Machine.Contains(machine)) // applichiamo la regola a quella macchina
+                    //1 batch di documenti
+                    var batch = rules.Current;
+
+                    //per ogni rule nel batch
+                    foreach (var r in batch)
                     {
-                        // controlliamo se qualche campo della telemetria è contenuta nelle regole
-                        if (campiTele.ContainsKey(r.Field))
+                        if (r.Machine.Contains(machine)) // applichiamo la regola a quella macchina
                         {
-                            // otteniamo il campo value
-                            string v;
-                            campiTele.TryGetValue(r.Field, out v);
-
-                            double value = Convert.ToDouble(v);
-                            double rValue = Convert.ToDouble(r.Value);
-
-                            value = Math.Round(value, 3);
-
-                            if (r.Period == null && r.Frequency == null) // made from instantanea
+                            // controlliamo se qualche campo della telemetria è contenuta nelle regole
+                            if (campiTele.ContainsKey(r.Field))
                             {
-                                if (!campiTele.TryAdd("type_telemetry", "Instant"))
-                                    campiTele["type_telemetry"] = "Instant";
-                            }
-                            else
-                                if (!campiTele.TryAdd("type_telemetry", "Average"))
-                                campiTele["type_telemetry"] = "Average";
+                                // otteniamo il campo value
+                                string v;
+                                campiTele.TryGetValue(r.Field, out v);
+
+                                double value = Convert.ToDouble(v);
+                                double rValue = Convert.ToDouble(r.Value);
+
+                                value = Math.Round(value, 3);
+
+                                if (r.Period == null && r.Frequency == null) // made from instantanea
+                                {
+                                    if (!campiTele.TryAdd("type_telemetry", "Instant"))
+                                        campiTele["type_telemetry"] = "Instant";
+                                }
+                                else
+                                    if (!campiTele.TryAdd("type_telemetry", "Average"))
+                                    campiTele["type_telemetry"] = "Average";
 
 
-                            switch (r.ConditionOperator)
-                            {
-                                case ">=":
-                                    if (value >= rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case "<=":
-                                    if (value <= rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case ">":
-                                    if (value > rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case "<":
-                                    if (value < rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case "=":
-                                    if (value == rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
-                                case "!=":
-                                    if (value != rValue)
-                                        GetActions(r.actions, campiTele, r);
-                                    break;
+                                switch (r.ConditionOperator)
+                                {
+                                    case ">=":
+                                        if (value >= rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case "<=":
+                                        if (value <= rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case ">":
+                                        if (value > rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case "<":
+                                        if (value < rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case "=":
+                                        if (value == rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                    case "!=":
+                                        if (value != rValue)
+                                            GetActions(r.actions, campiTele, r);
+                                        break;
+                                }
                             }
+
                         }
                     }
                 }
+
+
             }
             #endregion
         }
@@ -470,7 +517,7 @@ namespace Alerting
 
         private static void AliveServer(string ip, int port)
         {
-            PingServer server = new PingServer(ip,port);
+            PingServer server = new PingServer(ip, port);
         }
 
     }

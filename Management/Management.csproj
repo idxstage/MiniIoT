@@ -12,11 +12,43 @@
     <None Include="config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\.gitignore" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\.travis.yml" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\dist\bootstrap-tagsinput-angular.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\dist\bootstrap-tagsinput-angular.min.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\dist\bootstrap-tagsinput-angular.min.js.map" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\dist\bootstrap-tagsinput.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\dist\bootstrap-tagsinput.less" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\dist\bootstrap-tagsinput.min.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\dist\bootstrap-tagsinput.min.js.map" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\dist\bootstrap-tagsinput.zip" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\examples\assets\app.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\examples\assets\app_bs2.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\examples\assets\app_bs3.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\Gruntfile.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\karma.conf.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\LICENSE" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\README.md" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\src\bootstrap-tagsinput-angular.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\src\bootstrap-tagsinput.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\test\bootstrap-tagsinput-angular.tests.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\test\bootstrap-tagsinput\events.tests.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\test\bootstrap-tagsinput\input_with_object_items.tests.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\test\bootstrap-tagsinput\input_with_string_items.tests.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\test\bootstrap-tagsinput\reproduced_bugs.tests.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\test\bootstrap-tagsinput\select_with_object_items.tests.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\test\bootstrap-tagsinput\select_with_string_items.tests.js" />
+    <None Include="wwwroot\lib\bootstrap-tagsinput-latest\test\helpers.js" />
+    <None Include="wwwroot\lib\sweetalert2\sweetalert2.all.js" />
+    <None Include="wwwroot\lib\sweetalert2\sweetalert2.all.min.js" />
+    <None Include="wwwroot\lib\sweetalert2\sweetalert2.js" />
+    <None Include="wwwroot\lib\sweetalert2\sweetalert2.min.js" />
+    <None Include="wwwroot\lib\tagsinput\jquery.tagsinput.js" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="IKVM" Version="8.1.5717" />
-    <PackageReference Include="MongoDB.Driver" Version="2.10.4" />
+    <PackageReference Include="MongoDB.Driver" Version="2.11.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Alerting\Alerting.csproj" />
@@ -26,5 +58,6 @@
     <Content Update="config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>  
+  </ItemGroup>
+  <ProjectExtensions><VisualStudio><UserProperties config_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>  
 </Project>
