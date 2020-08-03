@@ -1,112 +1,114 @@
 ﻿@{
 	ViewData["Title"] = "Home Page";
 }
-<html>
-<head>
-	<div class="text-center">
-		<h1 class="display-4">Applicazione Monitoring</h1>
-	</div>
-</head>
-<body>
-	<table style="width:100%;">
-		<tr>
-			<th>Nome Servizio</th>
-			<th>Status</th>
-		</tr>
-		<tr>
-			<th>Alerting</th>
-			<th id="Alerting">Offline</th>
-		</tr>
-		<tr>
-			<td>Database</td>
-			<td id="Database">Offline</td>
-		</tr>
-		<tr>
-			<td>Hub</td>
-			<td id="Hub">Offline</td>
-		</tr>
-		<tr>
-			<th>Nodered</th>
-			<th id="Nodered">Offline</th>
-		</tr>
-		<tr>
-			<td>Grafana</td>
-			<td id="Grafana">Offline</td>
-		</tr>
-		<tr>
-			<td>RabbitMQ</td>
-			<td id="RabbitMQ">Offline</td>
-		</tr>
-	</table>
+    <html>
+    <head>
+        <div class="text-center">
+            <h1 class="display-4">Applicazione Monitoring</h1>
+        </div>
+    </head>
+    <body>
+        <table style="width:100%;">
+            <tr>
+                <th>Nome Servizio</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <th>Alerting</th>
+                <th id="Alerting">Offline</th>
+            </tr>
+            <tr>
+                <th>Database</th>
+                <th id="Database">Offline</th>
+            </tr>
+            <tr>
+                <th>Hub</th>
+                <th id="Hub">Offline</th>
+            </tr>
+            <tr>
+                <th>Nodered</th>
+                <th id="Nodered">Offline</th>
+            </tr>
+            <tr>
+                <th>Grafana</th>
+                <th id="Grafana">Offline</th>
+            </tr>
+            <tr>
+                <th>RabbitMQ</th>
+                <th id="RabbitMQ">Offline</th>
+            </tr>
+        </table>
 
-</body>
+    </body>
 
-<script src="~/lib/jquery/dist/jquery.js"></script>
-<script>
-	$(document).ready(function () {
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script>
+        $(document).ready(function () {
 
-		function StartPing() {
-			var myVar = setInterval(Ping, 10000);
-		}
+            function StartPing() {
+                Ping();
+                var myVar = setInterval(Ping, 3000);
+            }
 
-		/*
-		function getTiming() {
-			$.ajax({
-				type: "GET",
-				url: "/Home/GetTiming",
-				contentType: "application/text; charset=utf-8",
-				dataType: "text",
+            /*
+            function getTiming() {
+                $.ajax({
+                    type: "GET",
+                    url: "/Home/GetTiming",
+                    contentType: "application/text; charset=utf-8",
+                    dataType: "text",
 
-				success: function (response) {
-					return parseInt(response) * 1000;
-				},
-				failure: function (response) {
-					alert("ops, qualcosa è andato storto");
-				}
+                    success: function (response) {
+                        return parseInt(response) * 1000;
+                    },
+                    failure: function (response) {
+                        alert("ops, qualcosa è andato storto");
+                    }
 
-			});
-		}
-		*/
-
-
-		function Ping() {
-
-			$.ajax({
-				type: "GET",
-				url: "/Home/CheckAll",
-				contentType: "application/text; charset=utf-8",
-				dataType: "text",
-
-				success: function (response) {
-					var risultati = response.split(";");
-
-					risultati.forEach(elementi => {
-						var contenuto = elementi.split(":");
-						var id = contenuto[0];
-						var valore = parseInt(contenuto[1]);
-						if (valore == 1) {
-							document.getElementById(id).style.backgroundColor = "green";
-							document.getElementById(id).innerText = "Online";
-						}
-						else {
-							document.getElementById(id).style.backgroundColor = "red";
-							document.getElementById(id).innerText = "Offline";
-						}
-					});
-
-				},
-				failure: function (response) {
-					alert("ops, qualcosa è andato storto");
-				}
-			});
+                });
+            }
+            */
 
 
-		}
+            function Ping() {
+
+                $.ajax({
+                    type: "GET",
+                    url: "/Home/CheckAll",
+                    contentType: "application/text; charset=utf-8",
+                    dataType: "text",
+
+                    success: function (response) {
+                        var risultati = response.split(";");
+
+                        risultati.forEach(elementi => {
+                            var contenuto = elementi.split(":");
+                            var id = contenuto[0];
+                            var valore = parseInt(contenuto[1]);
+                            if (valore == 1) {
+                                document.getElementById(id).style.backgroundColor = "green";
+                                document.getElementById(id).innerText = "Online";
+                            }
+                            else {
+                                document.getElementById(id).style.backgroundColor = "red";
+                                document.getElementById(id).innerText = "Offline";
+                            }
+                        });
+
+                    },
+                    failure: function (response) {
+                        alert("ops, qualcosa è andato storto");
+                    }
+                });
 
 
-		StartPing();
-	
-	});
-</script>
+            }
 
-</html>
+
+            StartPing();
+
+        });
+    </script>
+
+
+    </html>
