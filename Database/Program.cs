@@ -75,9 +75,13 @@ namespace Database
             Console.WriteLine("{0} - {1}: ", message.Type.ToString(), message.Data);            
         }
 
-        private static void AliveServer(string ip, int port)
+        private static async void AliveServer(string ip, int port)
         {
-            PingServer server = new PingServer(ip, port);
+            await Task.Run(() =>
+            {
+                PingServer server = new PingServer(ip, port);
+            });
+
         }
     }
 }

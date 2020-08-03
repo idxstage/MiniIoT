@@ -537,9 +537,12 @@ namespace Alerting
             rules = JsonConvert.DeserializeObject<Rules>(s);
         }
 
-        private static void AliveServer(string ip, int port)
+        private static async void AliveServer(string ip, int port)
         {
-            PingServer server = new PingServer(ip, port);
+            await Task.Run(() =>
+            {
+                PingServer server = new PingServer(ip, port);
+            });
         }
 
     }
