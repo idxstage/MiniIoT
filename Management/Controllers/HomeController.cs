@@ -79,7 +79,7 @@ namespace Management.Controllers
                 else
                     return $"{modulo.Name}:0;";
             }
-            catch (HttpRequestException ex)
+            catch (HttpRequestException)
             {
                 return $"{modulo.Name}:0;";
             }
