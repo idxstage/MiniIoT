@@ -38,6 +38,7 @@ namespace Alerting
         private static IMongoDatabase _database;
         private static IMongoCollection<Rule> _rulesCollection;
         private static readonly ILog log = LogManager.GetLogger(typeof(Program));
+        private static Timer refreshRule;
 
         static void Main(string[] args)
         {
@@ -72,17 +73,16 @@ namespace Alerting
             _database = _client.GetDatabase("MiniIoT");
             _rulesCollection = _database.GetCollection<Rule>("Rules");
 
-            _pool = new Semaphore(1, 1);
             var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             var filePath = $"{currentPath}\\rules.json";
 
             LoadRules(filePath);
 
-
+            refreshRule = new Timer(StartTasksToDB, null, 0, 10000);
             // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
 
             // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
-            StartTasksToDB();
+            //StartTasksToDB();
 
             Console.ReadLine();
         }
@@ -222,13 +222,14 @@ namespace Alerting
         /// </summary>
         /// 
         static List<Timer> listaThread = new List<Timer>();
-        private static void StartTasksToDB()
+        private static void StartTasksToDB(object o)
         {
             // ricerchiamo tra le regole quelle che hanno Period e Frequency non a null
             // Frequency dice ogni quanto chiediamo al db le telemetrie, period quanto vecchie
 
             Rules regoleValide = new Rules();
             regoleValide.rules = new List<Rule>();
+            listaThread = new List<Timer>();
 
             foreach (Rule r in rules.rules)
             {
