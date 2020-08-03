@@ -148,10 +148,14 @@ namespace Alerting
                         double somma = 0;
                         List<string> indici = null;
                         List<string> valori = null;
-                        bool b = false;
+                        bool b = false; // serve per vedere se ts è il primo o secondo dato
                         int i = -1;
                         Dictionary<string, string> media = new Dictionary<string, string>();
+                        Dictionary<string, string> min = new Dictionary<string, string>();
+                        Dictionary<string, string> max = new Dictionary<string, string>();
+                        int m = Int32.MaxValue, M = -1; // m è minimo e M è massimo
                         var k = telemetrie.GetEnumerator();
+
                         while (k.MoveNext())
                         {
                             // otteniamo i campi della telemetria
@@ -167,7 +171,6 @@ namespace Alerting
                                     b = true;
                                     i = 1;
                                 }
-
                                 field = valori[1];
                             }
                             else
@@ -181,12 +184,31 @@ namespace Alerting
                             }
 
                             somma += Convert.ToDouble(field);
+
+                            
+                            if (Convert.ToInt32(field) > M)
+                                M = Convert.ToInt32(field);
+                            if (Convert.ToInt32(field) < m)
+                                m = Convert.ToInt32(field);
                         }
 
-                        double m = somma / telemetrie.Count;
+                        double med = somma / telemetrie.Count;
+                        // media
                         media.Add("machine_id", result.MachineId);
-                        media.Add(indici[i], m.ToString());
+                        media.Add(indici[i], med.ToString());
+
+                        // min 
+                        min.Add("machine_id", result.MachineId);
+                        min.Add(indici[i], m.ToString());
+
+                        // max
+                        max.Add("machine_id", result.MachineId);
+                        max.Add(indici[i], M.ToString());
+
+                        // controllo regole
                         CheckRules(media);
+                        CheckRules(min);
+                        CheckRules(max);
 
                     });
                     break;

@@ -42,12 +42,13 @@
     </body>
 
     <script src="~/lib/jquery/dist/jquery.js"></script>
+
     <script>
         $(document).ready(function () {
 
             function StartPing() {
                 Ping();
-                var myVar = setInterval(Ping, 3000);
+                var timer = setInterval(Ping, 3000);
             }
 
             /*
