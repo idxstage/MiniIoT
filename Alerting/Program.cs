@@ -307,8 +307,7 @@ namespace Alerting
 
             if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
             {
-                    var rules = await GetRulesFromDB(machine);
-                
+                    var rules = await GetRulesFromDB(machine);                
                     
 
                     //per ogni rule nel batch
@@ -371,11 +370,28 @@ namespace Alerting
         #endregion
 
 
-
+        /// <summary>
+        /// Ritrorna tutte le regole associate ad un particolare dispositivo
+        /// </summary>
+        /// <param name="id">Identificatore/nome del dispositivo</param>
+        /// <returns></returns>
         private static async Task<List<Rule>> GetRulesFromDB(String id)
         {
             return await _rulesCollection.Find(r => r.Id == id).ToListAsync();
         }
+
+
+        /// <summary>
+        /// Ritorna tutte le regole aventi campo frequency e period not null (per funzionalità MID)
+        /// </summary>
+        /// <param name=""></param>
+        /// <returns></returns>
+        private static async Task<List<Rule>> GetRulesFromDB()
+        {
+            return await _rulesCollection.Find(r => r.Period.HasValue && r.Frequency.HasValue).ToListAsync();
+        }
+
+
 
         private async static void CheckRules(Dictionary<string, string> campiTele)
         {
