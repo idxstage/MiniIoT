@@ -174,6 +174,46 @@ namespace Utils
             }
         }
 
+        public IModel CreateChannel()
+        {
+            return _connection.CreateModel();
+        }
+
+
+        //TEMPORANEO: PER TESTING
+        public async Task SendMessageAsync(String exchange, String routingKey, String message, IModel channel)
+        {
+            try
+            {
+                await Task.Run(() =>
+                {
+                    //preconditions 
+                    if (String.IsNullOrEmpty(message)) throw new ArgumentNullException();
+
+                    //IBasicProperties props = _channel.CreateBasicProperties();
+                    //props.Headers = new Dictionary<string, object>();
+                    //props.Headers.Add("type", type);
+
+                    //send            
+                    var body = Encoding.UTF8.GetBytes(message);
+                    channel.BasicPublish(exchange: exchange,
+                                         routingKey: routingKey,
+                                         basicProperties: null,
+                                         body: body);
+
+
+                    //output console 
+                    Console.WriteLine(" [x] Sent {0}", message);
+                    log.InfoFormat("+MESSAGE-SEND: PAYLOAD: {0}", message);
+                });
+            }
+
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
+        }
+
 
         public void ReceiveMessageAsync(string queueName)
         {

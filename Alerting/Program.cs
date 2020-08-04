@@ -120,21 +120,24 @@ namespace Alerting
                 var json = JsonConvert.SerializeObject(request);
 
 
-                var _amqpconn = new ClientAMQP();
-                var exchange = _config.Communications.AMQP.Exchange;
-                var queue = _config.Communications.AMQP.Queue;
+                //var _amqpconn = new ClientAMQP();
+                //var exchange = _config.Communications.AMQP.Exchange;
+                //var queue = _config.Communications.AMQP.Queue;
 
-                _amqpconn.CreateExchange(exchange, "direct");
+                //_amqpconn.CreateExchange(exchange, "direct");
 
                 //creo coda database
-                _amqpconn.CreateQueue(queue);
+                //_amqpconn.CreateQueue(queue);
                 //bind coda database a exchange e routing key 'database' 
                 //riservato per le comunicazioni al modulo alerting (es. risposta query al modulo Dabase)
-                _amqpconn.BindQueue(queue, exchange, "alerting");
+                //_amqpconn.BindQueue(queue, exchange, "alerting");
 
-                await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json);
 
-                _amqpconn.Close();
+                var channel = _amqpconn.CreateChannel();
+
+                await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json,channel);
+
+                //_amqpconn.Close();
             }
             catch (Exception e)
             {
@@ -177,6 +180,13 @@ namespace Alerting
                             Dictionary<string, string> min = new Dictionary<string, string>();
                             Dictionary<string, string> max = new Dictionary<string, string>();
                             int m = Int32.MaxValue, M = -1; // m è minimo e M è massimo
+
+
+
+                            //TODO: GESTIRE CASO NULL 
+                            //QUI DAVA ECCEZIONE
+                            if (telemetrie == null)
+                                return;
                             var k = telemetrie.GetEnumerator();
 
                             while (k.MoveNext())
