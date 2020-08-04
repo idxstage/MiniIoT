@@ -1,9 +1,12 @@
 ﻿using log4net;
+using log4net.Config;
 using MQTTnet;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,7 +19,7 @@ namespace Utils
         private readonly String queue;
 
         public EventHandler<String> AMQPMessageReceived;
-        private static readonly ILog log = LogManager.GetLogger(typeof(ClientAMQP));
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected virtual void OnAMQPMessageReceived(String message)
         {
@@ -94,6 +97,9 @@ namespace Utils
         {
             try
             {
+                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+                XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
                 Config config = Utils.ReadConfiguration();
                 var factory = new ConnectionFactory();
                 factory.DispatchConsumersAsync = true;
@@ -102,6 +108,8 @@ namespace Utils
                 factory.HostName = config.Communications.AMQP.Ip;
                 factory.Port = config.Communications.AMQP.Port;
                 factory.VirtualHost = config.Communications.AMQP.VirtualHost;
+                factory.RequestedHeartbeat = new TimeSpan(0, 2, 0);
+                factory.RequestedConnectionTimeout = new TimeSpan(0, 2, 0);
                 //inizializzazione connessione e canale di comunicazione
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
