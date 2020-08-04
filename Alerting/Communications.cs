@@ -85,7 +85,7 @@ namespace Alerting
 				oServer.ConnectType = SmtpConnectType.ConnectSSLAuto;
 
 				EASendMail.SmtpClient oSmtp = new EASendMail.SmtpClient();
-				oSmtp.SendMail(oServer, oMail);
+				// oSmtp.SendMail(oServer, oMail); // disabilitato per troppe email
 
 				log.InfoFormat("+MESSAGE-SEND: From: {0} -- To: {1} -- Severity: {2}", oMail.From, a.address, a.body);
 			}
