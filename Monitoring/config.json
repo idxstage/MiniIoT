@@ -26,7 +26,7 @@
           "UserName": "miniiot@libero.it",
           "Password": "Stage.2020"
         },
-        "Port": 465,
+        "Port": 465
     },
     "Slack": {
         "UserName":"Sistema.IoT"

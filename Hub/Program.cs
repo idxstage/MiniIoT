@@ -1,5 +1,6 @@
 ﻿using Database;
 using log4net;
+using log4net.Config;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
@@ -22,14 +23,20 @@ namespace Hub
 {
     class Program
     {
-        private static readonly ILog log = LogManager.GetLogger(typeof(Program));
         private static ClientAMQP _amqpconn;
         private static Config _config;
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         static void Main()
         {
 
             try
             {
+
+
+                // Inizializzazione configurazione Log4Net
+                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+                XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+                                
                 _config = Utils.Utils.ReadConfiguration();
                 Modulo modulo = _config.Monitoring.Modules.Find(x => x.Name.Contains("Hub"));
                 AliveServer(modulo.Ip, modulo.Port);

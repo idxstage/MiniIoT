@@ -73,7 +73,9 @@ namespace Utils
             factory.VirtualHost = config.Communications.AMQP.VirtualHost;
             //inizializzazione connessione e canale di comunicazione
             _connection = factory.CreateConnection();
-            _channel = _connection.CreateModel();         
+            _channel = _connection.CreateModel();
+            
+
             
         }
 

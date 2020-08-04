@@ -13,8 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alerting", "Alerting\Alerti
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Communications", "Communications\Communications.csproj", "{71A46315-E62D-4D69-8FCB-2700A4193BB0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Monitoring", "Monitoring\Monitoring.csproj", "{C44A3FBA-6357-47E9-A211-73E789507884}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Management", "Management\Management.csproj", "{A04F84D1-52AA-4E29-9AF1-D4993BFEB4EB}"
 EndProject
 Global
@@ -43,10 +41,6 @@ Global
 		{71A46315-E62D-4D69-8FCB-2700A4193BB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71A46315-E62D-4D69-8FCB-2700A4193BB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71A46315-E62D-4D69-8FCB-2700A4193BB0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C44A3FBA-6357-47E9-A211-73E789507884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C44A3FBA-6357-47E9-A211-73E789507884}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C44A3FBA-6357-47E9-A211-73E789507884}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C44A3FBA-6357-47E9-A211-73E789507884}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A04F84D1-52AA-4E29-9AF1-D4993BFEB4EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A04F84D1-52AA-4E29-9AF1-D4993BFEB4EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A04F84D1-52AA-4E29-9AF1-D4993BFEB4EB}.Release|Any CPU.ActiveCfg = Release|Any CPU

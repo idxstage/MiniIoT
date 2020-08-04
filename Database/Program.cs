@@ -1,7 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using log4net;
+using log4net.Config;
+using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
 using System;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Utils;
@@ -18,12 +22,20 @@ namespace Database
         private static DBConnection _dbconnection;
         private static ClientAMQP _amqpconn;
         private static Config _config;
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         static void Main(string[] args)
         {            
 
             _dbconnection = new DBConnection();
             _amqpconn = new ClientAMQP();
             _config = Utils.Utils.ReadConfiguration();
+
+
+            // Inizializzazione configurazione Log4Net
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
+
 
             Modulo modulo = _config.Monitoring.Modules.Find(x => x.Name.Contains("Database"));
             AliveServer(modulo.Ip, modulo.Port);
@@ -57,7 +69,7 @@ namespace Database
             switch (message.Type)
             {
                 case AMQPMessageType.Telemetry:
-                    await _dbconnection.WriteData(message.Data);
+                    await _dbconnection.WriteData(message.Data);                   
                     break;                    
                 case AMQPMessageType.Query:
                     var query = JsonConvert.DeserializeObject<Query>(message.Data);

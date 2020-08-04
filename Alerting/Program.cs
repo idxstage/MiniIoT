@@ -37,7 +37,7 @@ namespace Alerting
         private static IMongoClient _client;
         private static IMongoDatabase _database;
         private static IMongoCollection<Rule> _rulesCollection;
-        private static readonly ILog log = LogManager.GetLogger(typeof(Program));
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static Timer refreshRule;
 
         static void Main(string[] args)
@@ -47,6 +47,13 @@ namespace Alerting
 
             Modulo modulo = _config.Monitoring.Modules.Find(x => x.Name.Contains("Alerting"));
             AliveServer(modulo.Ip, modulo.Port);
+
+
+            // Inizializzazione configurazione Log4Net
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
+
 
             var exchange = _config.Communications.AMQP.Exchange;
             var queue = _config.Communications.AMQP.Queue;
