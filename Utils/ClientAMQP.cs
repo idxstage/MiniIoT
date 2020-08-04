@@ -20,8 +20,15 @@ namespace Utils
 
         protected virtual void OnAMQPMessageReceived(String message)
         {
-            if (AMQPMessageReceived != null)
-                AMQPMessageReceived(this, message);
+            try
+            {
+                if (AMQPMessageReceived != null)
+                    AMQPMessageReceived(this, message);
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
         }
 
         public void CreateExchange(String exchangeName, string type)
@@ -29,53 +36,80 @@ namespace Utils
             //TODO IMPLEMENTARE CON ENUMERATORE
             //l'exchange fanout inoltra i messaggi in tutte le code disponibili
             //broadcast
-            switch (type)
+            try
             {
-                case "fanout":
-                    _channel.ExchangeDeclare(exchangeName, ExchangeType.Fanout);
-                break;
-                case "direct":
-                    _channel.ExchangeDeclare(exchange: "direct_message",type: "direct");
-                break;
+                switch (type)
+                {
+                    case "fanout":
+                        _channel.ExchangeDeclare(exchangeName, ExchangeType.Fanout);
+                        break;
+                    case "direct":
+                        _channel.ExchangeDeclare(exchange: "direct_message", type: "direct");
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
             }
         }
 
         public void CreateQueue(String queueName)
         {
-            if (_channel != null && _channel.IsOpen)
+            try
             {
-                //dichiarazione coda
-                _channel.QueueDeclare(queue: queueName,
-                                        durable: false,
-                                        exclusive: false,
-                                        autoDelete: true,
-                                        arguments: null);                
-            }            
+                if (_channel != null && _channel.IsOpen)
+                {
+                    //dichiarazione coda
+                    _channel.QueueDeclare(queue: queueName,
+                                            durable: false,
+                                            exclusive: false,
+                                            autoDelete: true,
+                                            arguments: null);
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+                      
         }
 
         public void BindQueue(String queueName, String exchangeName, String routingKey)
         {
             //associazione exhange a coda
-            _channel.QueueBind(queue: queueName,
+            try
+            {
+                _channel.QueueBind(queue: queueName,
               exchange: exchangeName,
               routingKey: routingKey);
+            }
+            catch(Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
         }
 
         public ClientAMQP()
-        {       
-            Config config = Utils.ReadConfiguration();
-            var factory = new ConnectionFactory();            
-            factory.DispatchConsumersAsync = true;
-            factory.UserName = config.Communications.AMQP.UserName;
-            factory.Password = config.Communications.AMQP.Password;
-            factory.HostName = config.Communications.AMQP.Ip;
-            factory.Port = config.Communications.AMQP.Port;
-            factory.VirtualHost = config.Communications.AMQP.VirtualHost;
-            //inizializzazione connessione e canale di comunicazione
-            _connection = factory.CreateConnection();
-            _channel = _connection.CreateModel();
-            
-
+        {
+            try
+            {
+                Config config = Utils.ReadConfiguration();
+                var factory = new ConnectionFactory();
+                factory.DispatchConsumersAsync = true;
+                factory.UserName = config.Communications.AMQP.UserName;
+                factory.Password = config.Communications.AMQP.Password;
+                factory.HostName = config.Communications.AMQP.Ip;
+                factory.Port = config.Communications.AMQP.Port;
+                factory.VirtualHost = config.Communications.AMQP.VirtualHost;
+                //inizializzazione connessione e canale di comunicazione
+                _connection = factory.CreateConnection();
+                _channel = _connection.CreateModel();
+            }
+            catch(Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }      
             
         }
 
@@ -86,10 +120,17 @@ namespace Utils
      
         public void Close()
         {
-            if (_channel.IsClosed) return;
-            
-            _channel.Close();
-            _connection.Close();
+            try
+            {
+                if (_channel.IsClosed) return;
+
+                _channel.Close();
+                _connection.Close();
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
         }
 
         public async Task SendMessageAsync(String exchange, String routingKey, String message)
