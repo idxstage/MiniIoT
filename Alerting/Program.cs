@@ -236,6 +236,8 @@ namespace Alerting
 
             listaThread = new List<Timer>();
 
+            rules.rules = GetRulesFromDB().Result;
+
             foreach (Rule r in rules.rules)
             {
                 if (r.Period != null && r.Frequency != null)
@@ -486,6 +488,27 @@ namespace Alerting
                 switch (a.type)
                 {
                     case "Mail":
+                        Task.Run(() =>
+                        {
+                            Communications.SendMessageSMTP(a, r, campiTele);
+                        });
+                        break;
+
+                    case "Email":
+                        Task.Run(() =>
+                        {
+                            Communications.SendMessageSMTP(a, r, campiTele);
+                        });
+                        break;
+
+                    case "E-mail":
+                        Task.Run(() =>
+                        {
+                            Communications.SendMessageSMTP(a, r, campiTele);
+                        });
+                        break;
+
+                    case "EMAIL":
                         Task.Run(() =>
                         {
                             Communications.SendMessageSMTP(a, r, campiTele);
