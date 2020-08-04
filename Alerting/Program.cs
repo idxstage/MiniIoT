@@ -76,7 +76,7 @@ namespace Alerting
             var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             var filePath = $"{currentPath}\\rules.json";
 
-            LoadRules(filePath);
+            //LoadRules(filePath);
 
             refreshRule = new Timer(StartTasksToDB, null, 0, 10000);
             // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
@@ -231,6 +231,8 @@ namespace Alerting
             regoleValide.rules = new List<Rule>();
             listaThread = new List<Timer>();
 
+            rules.rules = GetRulesFromDB().Result;
+
             foreach (Rule r in rules.rules)
             {
                 if (r.Period != null && r.Frequency != null)
@@ -376,9 +378,9 @@ namespace Alerting
         /// </summary>
         /// <param name="id">Identificatore/nome del dispositivo</param>
         /// <returns></returns>
-        private static async Task<List<Rule>> GetRulesFromDB(String id)
+        private static async Task<List<Rule>> GetRulesFromDB(String machine)
         {
-            return await _rulesCollection.Find(r => r.Id == id).ToListAsync();
+            return await _rulesCollection.Find(r => r.Machine.Contains(machine)).ToListAsync();
         }
 
 
@@ -481,6 +483,27 @@ namespace Alerting
                 switch (a.type)
                 {
                     case "Mail":
+                        Task.Run(() =>
+                        {
+                            Communications.SendMessageSMTP(a, r, campiTele);
+                        });
+                        break;
+
+                    case "Email":
+                        Task.Run(() =>
+                        {
+                            Communications.SendMessageSMTP(a, r, campiTele);
+                        });
+                        break;
+
+                    case "E-mail":
+                        Task.Run(() =>
+                        {
+                            Communications.SendMessageSMTP(a, r, campiTele);
+                        });
+                        break;
+
+                    case "EMAIL":
                         Task.Run(() =>
                         {
                             Communications.SendMessageSMTP(a, r, campiTele);
