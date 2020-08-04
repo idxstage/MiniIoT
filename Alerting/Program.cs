@@ -42,181 +42,212 @@ namespace Alerting
 
         static void Main(string[] args)
         {
-            _amqpconn = new ClientAMQP();
-            _config = Utils.Utils.ReadConfiguration();
 
-            Modulo modulo = _config.Monitoring.Modules.Find(x => x.Name.Contains("Alerting"));
-            AliveServer(modulo.Ip, modulo.Port);
+            try
+            {
+                _amqpconn = new ClientAMQP();
+                _config = Utils.Utils.ReadConfiguration();
 
-            var exchange = _config.Communications.AMQP.Exchange;
-            var queue = _config.Communications.AMQP.Queue;
+                Modulo modulo = _config.Monitoring.Modules.Find(x => x.Name.Contains("Alerting"));
+                AliveServer(modulo.Ip, modulo.Port);
 
-            _amqpconn.CreateExchange(exchange, "direct");
+                var exchange = _config.Communications.AMQP.Exchange;
+                var queue = _config.Communications.AMQP.Queue;
 
-            //creo coda database
-            _amqpconn.CreateQueue(queue);
+                _amqpconn.CreateExchange(exchange, "direct");
 
-            //bind coda database a exchange ed routing key 'common'
-            //canale generale per la ricezione delle telemetrie da parte dell'hub
-            _amqpconn.BindQueue(queue, exchange, "common");
+                //creo coda database
+                _amqpconn.CreateQueue(queue);
 
-            //bind coda database a exchange e routing key 'database' 
-            //riservato per le comunicazioni al modulo alerting (es. risposta query al modulo Dabase)
-            _amqpconn.BindQueue(queue, exchange, "alerting");
+                //bind coda database a exchange ed routing key 'common'
+                //canale generale per la ricezione delle telemetrie da parte dell'hub
+                _amqpconn.BindQueue(queue, exchange, "common");
 
-            //imposto evento ricezione messaggi AMQP
-            _amqpconn.AMQPMessageReceived += OnAMQPMessageReceived;
-            _amqpconn.ReceiveMessageAsync(queue);
+                //bind coda database a exchange e routing key 'database' 
+                //riservato per le comunicazioni al modulo alerting (es. risposta query al modulo Dabase)
+                _amqpconn.BindQueue(queue, exchange, "alerting");
 
-            //inizializzo connessione con MongoDB
-            _client = new MongoClient(_config.MongoDB.ConnectionString);
-            _database = _client.GetDatabase("MiniIoT");
-            _rulesCollection = _database.GetCollection<Rule>("Rules");
+                //imposto evento ricezione messaggi AMQP
+                _amqpconn.AMQPMessageReceived += OnAMQPMessageReceived;
+                _amqpconn.ReceiveMessageAsync(queue);
 
-            var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            var filePath = $"{currentPath}\\rules.json";
+                //inizializzo connessione con MongoDB
+                _client = new MongoClient(_config.MongoDB.ConnectionString);
+                _database = _client.GetDatabase("MiniIoT");
+                _rulesCollection = _database.GetCollection<Rule>("Rules");
 
-            //LoadRules(filePath);
+                var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                var filePath = $"{currentPath}\\rules.json";
 
-            refreshRule = new Timer(StartTasksToDB, null, 0, 10000);
-            // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
+                //LoadRules(filePath);
 
-            // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
-            //StartTasksToDB();
+                refreshRule = new Timer(StartTasksToDB, null, 0, 10000);
+                // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
 
-            Console.ReadLine();
+                // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
+                //StartTasksToDB();
+
+                Console.ReadLine();
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+
+
+            
         }
 
 
         public static async void GetTelemetryFromDB(string machineId, int period, string field)
         {
-            var query = new Query();
-            query.MachineId = machineId;
-            query.Period = period;
-            query.Field = field;
-            var data = JsonConvert.SerializeObject(query);
-            var request = new AMQPMessage();
-            request.Sender = _config.Communications.AMQP.Queue;
-            request.Data = data;
-            request.Type = AMQPMessageType.Query;
-
-            var json = JsonConvert.SerializeObject(request);
 
 
-            var _amqpconn = new ClientAMQP();
-            var exchange = _config.Communications.AMQP.Exchange;
-            var queue = _config.Communications.AMQP.Queue;
+            try
+            {
+                var query = new Query();
+                query.MachineId = machineId;
+                query.Period = period;
+                query.Field = field;
+                var data = JsonConvert.SerializeObject(query);
+                var request = new AMQPMessage();
+                request.Sender = _config.Communications.AMQP.Queue;
+                request.Data = data;
+                request.Type = AMQPMessageType.Query;
 
-            _amqpconn.CreateExchange(exchange, "direct");
+                var json = JsonConvert.SerializeObject(request);
 
-            //creo coda database
-            _amqpconn.CreateQueue(queue);
-            //bind coda database a exchange e routing key 'database' 
-            //riservato per le comunicazioni al modulo alerting (es. risposta query al modulo Dabase)
-            _amqpconn.BindQueue(queue, exchange, "alerting");
 
-            await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json);
+                var _amqpconn = new ClientAMQP();
+                var exchange = _config.Communications.AMQP.Exchange;
+                var queue = _config.Communications.AMQP.Queue;
 
-            _amqpconn.Close();
+                _amqpconn.CreateExchange(exchange, "direct");
+
+                //creo coda database
+                _amqpconn.CreateQueue(queue);
+                //bind coda database a exchange e routing key 'database' 
+                //riservato per le comunicazioni al modulo alerting (es. risposta query al modulo Dabase)
+                _amqpconn.BindQueue(queue, exchange, "alerting");
+
+                await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json);
+
+                _amqpconn.Close();
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+
+            
 
         }
 
         public async static void OnAMQPMessageReceived(object sender, String msg)
         {
 
-            var message = JsonConvert.DeserializeObject<AMQPMessage>(msg);
-            switch (message.Type)
+            try
             {
-                case AMQPMessageType.Telemetry:
-                    await Task.Run(() =>
-                    {
-                        CheckRules(message.Data);
-                    });
-
-                    break;
-                case AMQPMessageType.QueryResult:
-                    await Task.Run(() =>
-                    {
-                        Console.WriteLine("Risposta: " + message.Data);
-                        var result = JsonConvert.DeserializeObject<QueryResult>(message.Data);
-
-                        List<Dictionary<string, string>> telemetrie = new List<Dictionary<string, string>>();
-                        telemetrie = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(result.Payload);
-
-
-                        double somma = 0;
-                        List<string> indici = null;
-                        List<string> valori = null;
-                        bool b = false; // serve per vedere se ts è il primo o secondo dato
-                        int i = -1;
-                        Dictionary<string, string> media = new Dictionary<string, string>();
-                        Dictionary<string, string> min = new Dictionary<string, string>();
-                        Dictionary<string, string> max = new Dictionary<string, string>();
-                        int m = Int32.MaxValue, M = -1; // m è minimo e M è massimo
-                        var k = telemetrie.GetEnumerator();
-
-                        while (k.MoveNext())
+                var message = JsonConvert.DeserializeObject<AMQPMessage>(msg);
+                switch (message.Type)
+                {
+                    case AMQPMessageType.Telemetry:
+                        await Task.Run(() =>
                         {
-                            // otteniamo i campi della telemetria
-                            string field = null;
-                            indici = k.Current.Keys.ToList<string>();
-                            valori = k.Current.Values.ToList<string>();
+                            CheckRules(message.Data);
+                        });
+
+                        break;
+                    case AMQPMessageType.QueryResult:
+                        await Task.Run(() =>
+                        {
+                            Console.WriteLine("Risposta: " + message.Data);
+                            var result = JsonConvert.DeserializeObject<QueryResult>(message.Data);
+
+                            List<Dictionary<string, string>> telemetrie = new List<Dictionary<string, string>>();
+                            telemetrie = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(result.Payload);
 
 
-                            if (indici.IndexOf("ts") == 0)
+                            double somma = 0;
+                            List<string> indici = null;
+                            List<string> valori = null;
+                            bool b = false; // serve per vedere se ts è il primo o secondo dato
+                            int i = -1;
+                            Dictionary<string, string> media = new Dictionary<string, string>();
+                            Dictionary<string, string> min = new Dictionary<string, string>();
+                            Dictionary<string, string> max = new Dictionary<string, string>();
+                            int m = Int32.MaxValue, M = -1; // m è minimo e M è massimo
+                            var k = telemetrie.GetEnumerator();
+
+                            while (k.MoveNext())
                             {
-                                if (!b)
+                                // otteniamo i campi della telemetria
+                                string field = null;
+                                indici = k.Current.Keys.ToList<string>();
+                                valori = k.Current.Values.ToList<string>();
+
+
+                                if (indici.IndexOf("ts") == 0)
                                 {
-                                    b = true;
-                                    i = 1;
+                                    if (!b)
+                                    {
+                                        b = true;
+                                        i = 1;
+                                    }
+                                    field = valori[1];
                                 }
-                                field = valori[1];
-                            }
-                            else
-                            {
-                                if (!b)
+                                else
                                 {
-                                    b = true;
-                                    i = 0;
+                                    if (!b)
+                                    {
+                                        b = true;
+                                        i = 0;
+                                    }
+                                    field = valori[0];
                                 }
-                                field = valori[0];
+
+                                somma += Convert.ToDouble(field);
+
+
+                                if (Convert.ToInt32(field) > M)
+                                    M = Convert.ToInt32(field);
+                                if (Convert.ToInt32(field) < m)
+                                    m = Convert.ToInt32(field);
                             }
 
-                            somma += Convert.ToDouble(field);
+                            double med = somma / telemetrie.Count;
+                            // media
+                            media.Add("machine_id", result.MachineId);
+                            media.Add(indici[i], med.ToString());
+                            media.Add("type_telemetry", "Average");
 
-                            
-                            if (Convert.ToInt32(field) > M)
-                                M = Convert.ToInt32(field);
-                            if (Convert.ToInt32(field) < m)
-                                m = Convert.ToInt32(field);
-                        }
+                            // min 
+                            min.Add("machine_id", result.MachineId);
+                            min.Add(indici[i], m.ToString());
+                            min.Add("type_telemetry", "Minimun");
 
-                        double med = somma / telemetrie.Count;
-                        // media
-                        media.Add("machine_id", result.MachineId);
-                        media.Add(indici[i], med.ToString());
-                        media.Add("type_telemetry", "Average");
+                            // max
+                            max.Add("machine_id", result.MachineId);
+                            max.Add(indici[i], M.ToString());
+                            max.Add("type_telemetry", "Maximum");
 
-                        // min 
-                        min.Add("machine_id", result.MachineId);
-                        min.Add(indici[i], m.ToString());
-                        min.Add("type_telemetry", "Minimun");
+                            // controllo regole
+                            CheckRules(media);
+                            CheckRules(min);
+                            CheckRules(max);
 
-                        // max
-                        max.Add("machine_id", result.MachineId);
-                        max.Add(indici[i], M.ToString());
-                        max.Add("type_telemetry", "Maximum");
+                        });
+                        break;
+                }
 
-                        // controllo regole
-                        CheckRules(media);
-                        CheckRules(min);
-                        CheckRules(max);
-
-                    });
-                    break;
+                Console.WriteLine("Messaggio: " + message.Data);
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
             }
 
-            Console.WriteLine("Messaggio: " + message.Data);
+            
         }
 
         /// <summary>
@@ -229,33 +260,42 @@ namespace Alerting
             // ricerchiamo tra le regole quelle che hanno Period e Frequency non a null
             // Frequency dice ogni quanto chiediamo al db le telemetrie, period quanto vecchie
 
-            listaThread.Clear();
-            Rules regoleValide = new Rules();
-            regoleValide.rules = new List<Rule>();
-            rules.rules = GetRulesFromDB().Result;
-
-            listaThread = new List<Timer>();
-
-            rules.rules = GetRulesFromDB().Result;
-
-            foreach (Rule r in rules.rules)
+            try
             {
-                if (r.Period != null && r.Frequency != null)
-                    regoleValide.rules.Add(r);
-            }
+                listaThread.Clear();
+                Rules regoleValide = new Rules();
+                regoleValide.rules = new List<Rule>();
+                rules.rules = GetRulesFromDB().Result;
 
+                listaThread = new List<Timer>();
 
-            // otteniamo la telemetria per ogni macchina per quel periodo
-            foreach (Rule regola in regoleValide.rules)
-            {
-                foreach (string m in regola.Machine)
+                rules.rules = GetRulesFromDB().Result;
+
+                foreach (Rule r in rules.rules)
                 {
-                    string b = $"{m};{regola.Period};{regola.Field}";
-                    // il task sia avvia subito e con una certa frequenza definita da regola.Frequency
-                    Timer t = new Timer(RequestQuery, b, 0, (int)regola.Frequency * 1000);
-                    listaThread.Add(t);
+                    if (r.Period != null && r.Frequency != null)
+                        regoleValide.rules.Add(r);
+                }
+
+
+                // otteniamo la telemetria per ogni macchina per quel periodo
+                foreach (Rule regola in regoleValide.rules)
+                {
+                    foreach (string m in regola.Machine)
+                    {
+                        string b = $"{m};{regola.Period};{regola.Field}";
+                        // il task sia avvia subito e con una certa frequenza definita da regola.Frequency
+                        Timer t = new Timer(RequestQuery, b, 0, (int)regola.Frequency * 1000);
+                        listaThread.Add(t);
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+
+            
         }
 
         /// <summary>
@@ -264,11 +304,21 @@ namespace Alerting
         /// <param name="body"></param>
         static void RequestQuery(object body)
         {
-            string b = (string)body;
-            string id = b.Split(';')[0];
-            int period = Convert.ToInt32(b.Split(';')[1]);
-            string field = b.Split(';')[2];
-            GetTelemetryFromDB(id, period, field);
+
+            try
+            {
+                string b = (string)body;
+                string id = b.Split(';')[0];
+                int period = Convert.ToInt32(b.Split(';')[1]);
+                string field = b.Split(';')[2];
+                GetTelemetryFromDB(id, period, field);
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+
+            
         }
 
         private static Dictionary<string, string> SmontaTelemetria(string telemetria)
@@ -293,7 +343,7 @@ namespace Alerting
             catch(Exception e)
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
-                return null;
+                return new Dictionary<string, string>();
             }
             
         }
@@ -306,17 +356,19 @@ namespace Alerting
 
         private async static void CheckRules(string telemetria)
         {
-            Dictionary<string, string> campiTele = SmontaTelemetria(telemetria);
-
-            #region Controllo Telemetria
-
-            string machine;
-            // controlliamo che la macchina sia contenuta all'interno della lista
-
-            if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
+            try
             {
-                    var rules = await GetRulesFromDB(machine);                
-                    
+                Dictionary<string, string> campiTele = SmontaTelemetria(telemetria);
+
+                #region Controllo Telemetria
+
+                string machine;
+                // controlliamo che la macchina sia contenuta all'interno della lista
+
+                if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
+                {
+                    var rules = await GetRulesFromDB(machine);
+
 
                     //per ogni rule nel batch
                     foreach (var r in rules)
@@ -372,10 +424,18 @@ namespace Alerting
                             }
                         }
                     }
-                
+
+                }
+                #endregion
             }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+
+            
         }
-        #endregion
+
 
 
         /// <summary>
@@ -385,7 +445,18 @@ namespace Alerting
         /// <returns></returns>
         private static async Task<List<Rule>> GetRulesFromDB(String machine)
         {
-            return await _rulesCollection.Find(r => r.Machine.Contains(machine)).ToListAsync();
+
+            try
+            {
+                return await _rulesCollection.Find(r => r.Machine.Contains(machine)).ToListAsync();
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+                return new List<Rule>();
+            }
+
+            
         }
 
 
@@ -396,22 +467,36 @@ namespace Alerting
         /// <returns></returns>
         private static async Task<List<Rule>> GetRulesFromDB()
         {
-            return await _rulesCollection.Find(r => r.Period.HasValue && r.Frequency.HasValue).ToListAsync();
+
+            try
+            {
+                return await _rulesCollection.Find(r => r.Period.HasValue && r.Frequency.HasValue).ToListAsync();
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+                return new List<Rule>();
+            }
+
+            
         }
 
 
 
         private async static void CheckRules(Dictionary<string, string> campiTele)
         {
-            #region Controllo Telemetria
 
-            string machine;
-            // controlliamo che la macchina sia contenuta all'interno della lista
-
-            if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
+            try
             {
+                #region Controllo Telemetria
+
+                string machine;
+                // controlliamo che la macchina sia contenuta all'interno della lista
+
+                if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
+                {
                     var rules = await GetRulesFromDB(machine);
-                
+
                     //per ogni rule nel batch
                     foreach (var r in rules)
                     {
@@ -470,11 +555,18 @@ namespace Alerting
 
                         }
                     }
-                
 
 
+
+                }
+                #endregion
             }
-            #endregion
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+
+            
         }
 
         /// <summary>
@@ -483,82 +575,92 @@ namespace Alerting
         /// <param name="actions"></param>
         private static void GetActions(List<Model.Action> actions, Dictionary<string, string> campiTele, Rule r)
         {
-            foreach (Action a in actions)
+
+            try
             {
-                switch (a.type)
+                foreach (Action a in actions)
                 {
-                    case "Mail":
-                        Task.Run(() =>
-                        {
-                            Communications.SendMessageSMTP(a, r, campiTele);
-                        });
-                        break;
-
-                    case "Email":
-                        Task.Run(() =>
-                        {
-                            Communications.SendMessageSMTP(a, r, campiTele);
-                        });
-                        break;
-
-                    case "E-mail":
-                        Task.Run(() =>
-                        {
-                            Communications.SendMessageSMTP(a, r, campiTele);
-                        });
-                        break;
-
-                    case "EMAIL":
-                        Task.Run(() =>
-                        {
-                            Communications.SendMessageSMTP(a, r, campiTele);
-                        });
-                        break;
-
-                    case "Slack":
-                        Task.Run(() =>
-                        {
-                            string text = "";
-                            IDictionaryEnumerator k = campiTele.GetEnumerator();
-
-                            while (k.MoveNext())
+                    switch (a.type)
+                    {
+                        case "Mail":
+                            Task.Run(() =>
                             {
-                                text += $"\n{k.Key}: {k.Value}";
-                            }
+                                Communications.SendMessageSMTP(a, r, campiTele);
+                            });
+                            break;
 
-                            // alleghiamo la regola
-                            text += "\nRegola:\n";
-                            text += $"Id: {r.Id}";
-                            text += $"\nDescription: {r.Description}";
-                            text += $"\nConditionOperator: {r.ConditionOperator}";
-                            text += $"\nField: {r.Field}";
-                            text += $"\nFrequency: {r.Frequency}";
-                            text += $"\nPeriod: {r.Period}";
-                            text += $"\nValue: {r.Value}";
-                            foreach (string s in r.Machine)
-                                text += $"\nMachine: {s}";
-                            foreach (Action ac in r.actions)
+                        case "Email":
+                            Task.Run(() =>
                             {
-                                text += $"Action\n";
-                                text += $"\nType: {ac.type}";
-                                text += $"\nAddress: {ac.address}";
-                                text += $"\nBody: {ac.body}";
-                            }
+                                Communications.SendMessageSMTP(a, r, campiTele);
+                            });
+                            break;
 
-                            string value;
-                            campiTele.TryGetValue("Value", out value);
-                            // alleghiamo il motivo dell'email
-                            text += "\nValore out poichè:\n " + r.Field + r.ConditionOperator + r.Value;
+                        case "E-mail":
+                            Task.Run(() =>
+                            {
+                                Communications.SendMessageSMTP(a, r, campiTele);
+                            });
+                            break;
 
-                            // alleghiamo le operazioni da fare
-                            text += "\n\nOperation to do\n" + a.body;
+                        case "EMAIL":
+                            Task.Run(() =>
+                            {
+                                Communications.SendMessageSMTP(a, r, campiTele);
+                            });
+                            break;
 
-                            Communications.SendMessageSlack(text, a.address);
+                        case "Slack":
+                            Task.Run(() =>
+                            {
+                                string text = "";
+                                IDictionaryEnumerator k = campiTele.GetEnumerator();
 
-                        });
-                        break;
+                                while (k.MoveNext())
+                                {
+                                    text += $"\n{k.Key}: {k.Value}";
+                                }
+
+                                // alleghiamo la regola
+                                text += "\nRegola:\n";
+                                text += $"Id: {r.Id}";
+                                text += $"\nDescription: {r.Description}";
+                                text += $"\nConditionOperator: {r.ConditionOperator}";
+                                text += $"\nField: {r.Field}";
+                                text += $"\nFrequency: {r.Frequency}";
+                                text += $"\nPeriod: {r.Period}";
+                                text += $"\nValue: {r.Value}";
+                                foreach (string s in r.Machine)
+                                    text += $"\nMachine: {s}";
+                                foreach (Action ac in r.actions)
+                                {
+                                    text += $"Action\n";
+                                    text += $"\nType: {ac.type}";
+                                    text += $"\nAddress: {ac.address}";
+                                    text += $"\nBody: {ac.body}";
+                                }
+
+                                string value;
+                                campiTele.TryGetValue("Value", out value);
+                                // alleghiamo il motivo dell'email
+                                text += "\nValore out poichè:\n " + r.Field + r.ConditionOperator + r.Value;
+
+                                // alleghiamo le operazioni da fare
+                                text += "\n\nOperation to do\n" + a.body;
+
+                                Communications.SendMessageSlack(text, a.address);
+
+                            });
+                            break;
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+
+            
         }
 
         /// <summary>
@@ -568,17 +670,35 @@ namespace Alerting
         /// 
         private static void LoadRules(string path)
         {
-            StreamReader sr = new StreamReader(path);
-            string s = sr.ReadToEnd();
-            rules = JsonConvert.DeserializeObject<Rules>(s);
+
+            try
+            {
+                StreamReader sr = new StreamReader(path);
+                string s = sr.ReadToEnd();
+                rules = JsonConvert.DeserializeObject<Rules>(s);
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+
+            
         }
 
         private static async void AliveServer(string ip, int port)
         {
-            await Task.Run(() =>
+            try
             {
-                PingServer server = new PingServer(ip, port);
-            });
+                await Task.Run(() =>
+                {
+                    PingServer server = new PingServer(ip, port);
+                });
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+            
         }
 
     }
