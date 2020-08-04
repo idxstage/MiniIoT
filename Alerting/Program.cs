@@ -76,7 +76,7 @@ namespace Alerting
             var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             var filePath = $"{currentPath}\\rules.json";
 
-            LoadRules(filePath);
+            //LoadRules(filePath);
 
             refreshRule = new Timer(StartTasksToDB, null, 0, 10000);
             // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
@@ -116,6 +116,8 @@ namespace Alerting
             _amqpconn.BindQueue(queue, exchange, "alerting");
 
             await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json);
+
+            _amqpconn.Close();
 
         }
 
@@ -227,8 +229,11 @@ namespace Alerting
             // ricerchiamo tra le regole quelle che hanno Period e Frequency non a null
             // Frequency dice ogni quanto chiediamo al db le telemetrie, period quanto vecchie
 
+            listaThread.Clear();
             Rules regoleValide = new Rules();
             regoleValide.rules = new List<Rule>();
+            rules.rules = GetRulesFromDB().Result;
+
             listaThread = new List<Timer>();
 
             foreach (Rule r in rules.rules)
@@ -376,9 +381,9 @@ namespace Alerting
         /// </summary>
         /// <param name="id">Identificatore/nome del dispositivo</param>
         /// <returns></returns>
-        private static async Task<List<Rule>> GetRulesFromDB(String id)
+        private static async Task<List<Rule>> GetRulesFromDB(String machine)
         {
-            return await _rulesCollection.Find(r => r.Id == id).ToListAsync();
+            return await _rulesCollection.Find(r => r.Machine.Contains(machine)).ToListAsync();
         }
 
 
