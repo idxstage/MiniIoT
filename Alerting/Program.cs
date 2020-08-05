@@ -86,14 +86,11 @@ namespace Alerting
                 var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
                 var filePath = $"{currentPath}\\rules.json";
 
-                //LoadRules(filePath);
+                // avvio timer regole ed email
 
-                refreshRule = new Timer(StartTasksToDB, null, 0, 10000);
-                sendMails = new Timer(Communications.SendAll, null, 60000, 60000); 
-                // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
+                refreshRule = new Timer(StartTasksToDB, null, 0, 10000); // 10 secondi
+                sendMails = new Timer(Communications.SendAll, null, 60000, 60000); // 1 minuto
 
-                // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
-                //StartTasksToDB();
 
                 Console.ReadLine();
             }
