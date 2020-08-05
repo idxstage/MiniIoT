@@ -20,13 +20,14 @@ namespace Alerting
     class Communications
     {
 		private static readonly ILog log = LogManager.GetLogger(typeof(Communications));
+
+		static Dictionary<SmtpServer, SmtpMail> messaggi = new Dictionary<SmtpServer, SmtpMail>();
 		public static void SendMessageSMTP(Action a, Rule r, Dictionary<string,string> campiTele)
 		{
 			try
 			{
 				Config c = Utils.Utils.ReadConfiguration();
 
-				MailMessage mail = new MailMessage();
 
 				SmtpMail oMail = new SmtpMail("TryIt");
 
@@ -85,7 +86,8 @@ namespace Alerting
 				oServer.ConnectType = SmtpConnectType.ConnectSSLAuto;
 
 				EASendMail.SmtpClient oSmtp = new EASendMail.SmtpClient();
-				// oSmtp.SendMail(oServer, oMail); // disabilitato per troppe email
+				//oSmtp.SendMail(oServer, oMail);
+				messaggi.Add(oServer, oMail);
 
 				log.InfoFormat("+MESSAGE-SEND: From: {0} -- To: {1} -- Severity: {2}", oMail.From, a.address, a.body);
 			}
@@ -95,6 +97,21 @@ namespace Alerting
 				log.ErrorFormat("!ERROR: {0} - Not send message to Gmail", e.ToString());
 			}
 			
+		}
+
+		public static void SendAll(object o)
+        {
+			if(messaggi.Count > 0)
+            {
+				var n = messaggi.GetEnumerator();
+				do
+				{
+					EASendMail.SmtpClient oSmtp = new EASendMail.SmtpClient();
+					oSmtp.SendMail(n.Current.Key, n.Current.Value);
+				}
+				while (n.MoveNext());
+				messaggi.Clear();
+			}
 		}
 
 		public static void SendMessageSlack(string text, string address)

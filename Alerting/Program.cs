@@ -39,6 +39,7 @@ namespace Alerting
         private static IMongoCollection<Rule> _rulesCollection;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static Timer refreshRule;
+        private static Timer sendMails;
 
         static void Main(string[] args)
         {
@@ -88,6 +89,7 @@ namespace Alerting
                 //LoadRules(filePath);
 
                 refreshRule = new Timer(StartTasksToDB, null, 0, 10000);
+                sendMails = new Timer(Communications.SendAll, null, 60000, 60000); 
                 // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
 
                 // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
