@@ -67,8 +67,12 @@ namespace Management.Controllers
         {
             try
             {
+                string uri;
                 // prepariamo e inviamo la richiesta
-                string uri = $"http://{modulo.Ip}:{modulo.Port}/";
+                if(modulo.Name.Equals("InfluxDB"))
+                    uri = $"http://{modulo.Ip}:{modulo.Port}/query";
+                else
+                    uri = $"http://{modulo.Ip}:{modulo.Port}/";
 
                 string response = await client.GetStringAsync(uri);
 
