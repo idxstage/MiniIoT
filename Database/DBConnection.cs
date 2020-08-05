@@ -28,7 +28,7 @@ namespace Database
         private readonly string database;
         private static readonly ILog log = LogManager.GetLogger(typeof(DBConnection));
         public DBConnection()
-        {
+        {            
             //lettura configurazione
             Config config = Utils.Utils.ReadConfiguration();
             String connString = String.Format("http://{0}:{1}", config.InfluxDB.Ip, config.InfluxDB.Port);
@@ -53,6 +53,7 @@ namespace Database
         /// <returns></returns>
         public async Task<String> ReadData(String machine_id, String field, int period = 0)
         {
+            
             String json = "";
             long elapsedMs = 0;
             var res = new QueryResult();
