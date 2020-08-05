@@ -17,16 +17,27 @@ using Utils;
 
 namespace Alerting
 {
+	class Coppia
+    {
+		public SmtpServer server;
+		public SmtpMail mail;
+    }
     class Communications
     {
 		private static readonly ILog log = LogManager.GetLogger(typeof(Communications));
+
+		static List<Coppia> messaggi = new List<Coppia>();
+		public Communications()
+        {
+			messaggi = new List<Coppia>();
+		}
+
 		public static void SendMessageSMTP(Action a, Rule r, Dictionary<string,string> campiTele)
 		{
 			try
 			{
 				Config c = Utils.Utils.ReadConfiguration();
 
-				MailMessage mail = new MailMessage();
 
 				SmtpMail oMail = new SmtpMail("TryIt");
 
@@ -84,10 +95,14 @@ namespace Alerting
 				// si arrangia col protocollo
 				oServer.ConnectType = SmtpConnectType.ConnectSSLAuto;
 
-				EASendMail.SmtpClient oSmtp = new EASendMail.SmtpClient();
-				// oSmtp.SendMail(oServer, oMail); // disabilitato per troppe email
+				//oSmtp.SendMail(oServer, oMail);
+				//messaggi.Add(oServer, oMail);
+				Coppia l = new Coppia();
+				l.mail = oMail;
+				l.server = oServer;
+				messaggi.Add(l);
 
-				log.InfoFormat("+MESSAGE-SEND: From: {0} -- To: {1} -- Severity: {2}", oMail.From, a.address, a.body);
+				
 			}
 
 			catch(Exception e)
@@ -95,6 +110,29 @@ namespace Alerting
 				log.ErrorFormat("!ERROR: {0} - Not send message to Gmail", e.ToString());
 			}
 			
+		}
+
+		public static void SendAll(object o)
+        {
+            try
+            {
+				if (messaggi.Count > 0)
+				{
+					EASendMail.SmtpClient oSmtp = new EASendMail.SmtpClient();
+					foreach (Coppia c in messaggi)
+                    {
+						oSmtp.SendMail(c.server, c.mail);
+						log.InfoFormat("+MESSAGE-SEND: From: {0} -- To: {1}", c.mail.From, c.mail.To);
+					}
+
+					messaggi.Clear();
+				}
+			}
+			
+			catch (Exception e)
+			{
+				log.ErrorFormat("!ERROR: {0} - Not send message to Gmail", e.ToString());
+			}
 		}
 
 		public static void SendMessageSlack(string text, string address)

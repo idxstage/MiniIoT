@@ -75,6 +75,18 @@
         "Ip": "10.0.0.73",
         "Port": 15672,
         "Timing": 10
+      },
+      {
+        "Name": "MongoDB",
+        "Ip": "127.0.0.1",
+        "Port": 27017,
+        "Timing": 10
+      },
+      {
+        "Name": "InfluxDB",
+        "Ip": "127.0.0.1",
+        "Port": 8086,
+        "Timing": 10
       }
     ]
   }
