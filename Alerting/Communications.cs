@@ -17,11 +17,21 @@ using Utils;
 
 namespace Alerting
 {
+	class Coppia
+    {
+		public SmtpServer server;
+		public SmtpMail mail;
+    }
     class Communications
     {
 		private static readonly ILog log = LogManager.GetLogger(typeof(Communications));
 
-		static Dictionary<SmtpServer, SmtpMail> messaggi = new Dictionary<SmtpServer, SmtpMail>();
+		static List<Coppia> messaggi = new List<Coppia>();
+		public Communications()
+        {
+			messaggi = new List<Coppia>();
+		}
+
 		public static void SendMessageSMTP(Action a, Rule r, Dictionary<string,string> campiTele)
 		{
 			try
@@ -85,11 +95,14 @@ namespace Alerting
 				// si arrangia col protocollo
 				oServer.ConnectType = SmtpConnectType.ConnectSSLAuto;
 
-				EASendMail.SmtpClient oSmtp = new EASendMail.SmtpClient();
 				//oSmtp.SendMail(oServer, oMail);
-				messaggi.Add(oServer, oMail);
+				//messaggi.Add(oServer, oMail);
+				Coppia l = new Coppia();
+				l.mail = oMail;
+				l.server = oServer;
+				messaggi.Add(l);
 
-				log.InfoFormat("+MESSAGE-SEND: From: {0} -- To: {1} -- Severity: {2}", oMail.From, a.address, a.body);
+				
 			}
 
 			catch(Exception e)
@@ -101,16 +114,25 @@ namespace Alerting
 
 		public static void SendAll(object o)
         {
-			if(messaggi.Count > 0)
+            try
             {
-				var n = messaggi.GetEnumerator();
-				do
+				if (messaggi.Count > 0)
 				{
 					EASendMail.SmtpClient oSmtp = new EASendMail.SmtpClient();
-					oSmtp.SendMail(n.Current.Key, n.Current.Value);
+					foreach (Coppia c in messaggi)
+                    {
+						oSmtp.SendMail(c.server, c.mail);
+						log.InfoFormat("+MESSAGE-SEND: From: {0} -- To: {1}", c.mail.From, c.mail.To);
+					}
+					
+
+					messaggi.Clear();
 				}
-				while (n.MoveNext());
-				messaggi.Clear();
+			}
+			
+			catch (Exception e)
+			{
+				log.ErrorFormat("!ERROR: {0} - Not send message to Gmail", e.ToString());
 			}
 		}
 
