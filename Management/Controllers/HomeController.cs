@@ -13,6 +13,7 @@ using System.Net.Http;
 using javax.jws;
 using com.sun.corba.se.impl.protocol.giopmsgheaders;
 using javax.xml.crypto;
+using System.Net;
 
 namespace Management.Controllers
 {
@@ -67,15 +68,14 @@ namespace Management.Controllers
         {
             try
             {
-                string uri;
-                // prepariamo e inviamo la richiesta
-                if(modulo.Name.Equals("InfluxDB"))
-                    uri = $"http://{modulo.Ip}:{modulo.Port}/query";
-                else
-                    uri = $"http://{modulo.Ip}:{modulo.Port}/";
+                    //uri = $"http://{modulo.Ip}:{modulo.Port}/";
+                HttpRequestMessage h = new HttpRequestMessage();
 
-                string response = await client.GetStringAsync(uri);
-
+                Uri uri = new Uri($"http://{modulo.Ip}:{modulo.Port}/");
+                h.RequestUri = uri;
+                HttpResponseMessage response = await client.SendAsync(h);
+                
+                    
                 // analizziamo la risposta
                 if (response != null)
                     return $"{modulo.Name}:1;";
