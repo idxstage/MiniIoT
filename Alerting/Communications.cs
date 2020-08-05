@@ -124,7 +124,6 @@ namespace Alerting
 						oSmtp.SendMail(c.server, c.mail);
 						log.InfoFormat("+MESSAGE-SEND: From: {0} -- To: {1}", c.mail.From, c.mail.To);
 					}
-					
 
 					messaggi.Clear();
 				}
