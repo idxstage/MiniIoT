@@ -12,6 +12,10 @@ using System.Threading.Tasks;
 
 namespace Utils
 {
+    public enum EXCHANGE_TYPE
+    {
+
+    }
     public class ClientAMQP
     {
         private readonly IConnection _connection;
@@ -34,22 +38,11 @@ namespace Utils
             }
         }
 
-        public void CreateExchange(String exchangeName, string type)
+        public void CreateExchange(String exchangeName, String type)
         {
-            //TODO IMPLEMENTARE CON ENUMERATORE
-            //l'exchange fanout inoltra i messaggi in tutte le code disponibili
-            //broadcast
             try
             {
-                switch (type)
-                {
-                    case "fanout":
-                        _channel.ExchangeDeclare(exchangeName, ExchangeType.Fanout);
-                        break;
-                    case "direct":
-                        _channel.ExchangeDeclare(exchange: "direct_message", type: "direct");
-                        break;
-                }
+                _channel.ExchangeDeclare(exchange: exchangeName, type: type);
             }
             catch (Exception e)
             {
@@ -146,14 +139,10 @@ namespace Utils
             {
                 await Task.Run(() =>
                 {
-                    //preconditions 
+                     
                     if (String.IsNullOrEmpty(message)) throw new ArgumentNullException();
 
-                    //IBasicProperties props = _channel.CreateBasicProperties();
-                    //props.Headers = new Dictionary<string, object>();
-                    //props.Headers.Add("type", type);
-
-                    //send            
+                    //invio             
                     var body = Encoding.UTF8.GetBytes(message);
                     lock (_channel)
                     {
@@ -162,10 +151,7 @@ namespace Utils
                                          basicProperties: null,
                                          body: body);
                     }               
-
-                    
-                    //output console 
-                    Console.WriteLine(" [x] Sent {0}", message);
+                                        
                     log.InfoFormat("+MESSAGE-SEND: PAYLOAD: {0}", message);
                 });
             }
@@ -183,14 +169,9 @@ namespace Utils
             {
                 await Task.Run(() =>
                 {
-                    //preconditions 
                     if (String.IsNullOrEmpty(message)) throw new ArgumentNullException();
 
-                    //IBasicProperties props = _channel.CreateBasicProperties();
-                    //props.Headers = new Dictionary<string, object>();
-                    //props.Headers.Add("type", type);
-
-                    //send            
+                    //invio            
                     var body = Encoding.UTF8.GetBytes(message);
                     lock (chan)
                     {
@@ -201,8 +182,6 @@ namespace Utils
                     }
 
 
-                    //output console 
-                    Console.WriteLine(" [x] Sent {0}", message);
                     log.InfoFormat("+MESSAGE-SEND: PAYLOAD: {0}", message);
                 });
             }
@@ -223,8 +202,6 @@ namespace Utils
             chan.Close();
         }
 
-
-
         public void ReceiveMessageAsync(string queueName)
         {
             try
@@ -232,12 +209,9 @@ namespace Utils
                 var consumer = new AsyncEventingBasicConsumer(_channel);
                 String message = "";
                 consumer.Received += async (model, ea) =>
-                {
-                    
-                    var body = ea.Body;
-                    
+                {                    
+                    var body = ea.Body;                    
                     message = Encoding.UTF8.GetString(body.ToArray());                  
-                    //Console.WriteLine(" [x] Msg:  {0}", message);
                     log.InfoFormat("+MESSAGE-READ: PAYLOAD: {0}", message);
                     OnAMQPMessageReceived(message);
                     await Task.Yield();
@@ -253,39 +227,6 @@ namespace Utils
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }       
-        }
-
-
-
-
-        public void ReceiveMessageAsync(string queueName, IModel chan)
-        {
-            try
-            {
-                var consumer = new AsyncEventingBasicConsumer(_channel);
-                String message = "";
-                consumer.Received += async (model, ea) =>
-                {
-
-                    var body = ea.Body;
-
-                    message = Encoding.UTF8.GetString(body.ToArray());
-                    //Console.WriteLine(" [x] Msg:  {0}", message);
-                    log.InfoFormat("+MESSAGE-READ: PAYLOAD: {0}", message);
-                    OnAMQPMessageReceived(message);
-                    await Task.Yield();
-                };
-                lock (chan)
-                {
-                    chan.BasicConsume(queue: queueName,
-                                         autoAck: true,
-                                         consumer: consumer);
-                }
-            }
-            catch (Exception e)
-            {
-                log.ErrorFormat("!ERROR: {0}", e.ToString());
-            }
         }
     }
 }

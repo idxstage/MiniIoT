@@ -32,13 +32,6 @@ namespace Utils
             }
 
             return config;
-        }
-
-        //public static ILoggerRepository GetLog4NetRepository()
-        //{
-        //    return LogManager.GetRepository(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\Log4NetConfig.conf");
-        //}
-
-      
+        }      
     }
 }

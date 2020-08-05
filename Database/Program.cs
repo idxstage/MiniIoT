@@ -1,6 +1,7 @@
 ﻿using log4net;
 using log4net.Config;
 using Newtonsoft.Json;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.IO;
@@ -28,24 +29,26 @@ namespace Database
 
             try
             {
-                _dbconnection = new DBConnection();
-                _amqpconn = new ClientAMQP();
-                _config = Utils.Utils.ReadConfiguration();
-
-
                 // Inizializzazione configurazione Log4Net
                 var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
                 XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
+                //Inizializzazione configurazione
+                _config = Utils.Utils.ReadConfiguration();
 
-
+                //Inizializzazione connessione con InfluxDB
+                _dbconnection = new DBConnection();
+                
+                //Inizializzazione modulo di monitoring
                 Modulo modulo = _config.Monitoring.Modules.Find(x => x.Name.Contains("Database"));
                 AliveServer(modulo.Ip, modulo.Port);
 
+                //Inizializzazione client AMQP
+                _amqpconn = new ClientAMQP();
                 var exchange = _config.Communications.AMQP.Exchange;
                 var queue = _config.Communications.AMQP.Queue;
 
-                _amqpconn.CreateExchange(exchange, "direct");
+                _amqpconn.CreateExchange(exchange, ExchangeType.Direct.ToString());
 
                 //creo coda database
                 _amqpconn.CreateQueue(queue);
@@ -71,6 +74,11 @@ namespace Database
            
         }
 
+        /// <summary>
+        /// Metodo invocato ogni qual volta viene ricevuto un messaggio AMQP
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="msg"></param>
         public async static void OnAMQPMessageReceived(object sender, String msg)
         {
             try
@@ -78,9 +86,12 @@ namespace Database
                 var message = JsonConvert.DeserializeObject<AMQPMessage>(msg);
                 switch (message.Type)
                 {
+                    //Ricezione telemetrie istantanee da broker AMQP
                     case AMQPMessageType.Telemetry:
+                        //scrittura su database InfluxDB
                         await _dbconnection.WriteData(message.Data);
                         break;
+                    //Ricezione richiesta di query da parte del microservizio DATABASE
                     case AMQPMessageType.Query:
                         var query = JsonConvert.DeserializeObject<Query>(message.Data);
                         int period = query.Period;
@@ -90,6 +101,7 @@ namespace Database
                         var result = await _dbconnection.ReadData(machineId, field, period);
                         var body = new AMQPMessage { Type = AMQPMessageType.QueryResult, Data = result, Sender = _config.Communications.AMQP.Queue };
                         var json = JsonConvert.SerializeObject(body);
+                        //invio risposta
                         await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, req_sender, json);
                         break;
                 }
@@ -103,6 +115,11 @@ namespace Database
            
         }
 
+        /// <summary>
+        /// Ping microservizio (monitoring)
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
         private static async void AliveServer(string ip, int port)
         {
             try

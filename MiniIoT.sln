@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database", "Database\Databa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alerting", "Alerting\Alerting.csproj", "{C4240FFC-0307-45E5-A325-1CDBC96ABB0A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Communications", "Communications\Communications.csproj", "{71A46315-E62D-4D69-8FCB-2700A4193BB0}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Management", "Management\Management.csproj", "{A04F84D1-52AA-4E29-9AF1-D4993BFEB4EB}"
 EndProject
 Global
@@ -37,10 +35,6 @@ Global
 		{C4240FFC-0307-45E5-A325-1CDBC96ABB0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4240FFC-0307-45E5-A325-1CDBC96ABB0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4240FFC-0307-45E5-A325-1CDBC96ABB0A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{71A46315-E62D-4D69-8FCB-2700A4193BB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{71A46315-E62D-4D69-8FCB-2700A4193BB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{71A46315-E62D-4D69-8FCB-2700A4193BB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{71A46315-E62D-4D69-8FCB-2700A4193BB0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A04F84D1-52AA-4E29-9AF1-D4993BFEB4EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A04F84D1-52AA-4E29-9AF1-D4993BFEB4EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A04F84D1-52AA-4E29-9AF1-D4993BFEB4EB}.Release|Any CPU.ActiveCfg = Release|Any CPU

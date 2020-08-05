@@ -24,7 +24,7 @@ using Query = Utils.Query;
 using System.Linq;
 using System.Net.WebSockets;
 using MongoDB.Driver;
-
+using RabbitMQ.Client;
 
 namespace Alerting
 {
@@ -55,12 +55,10 @@ namespace Alerting
                 var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
                 XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
-
-
                 var exchange = _config.Communications.AMQP.Exchange;
                 var queue = _config.Communications.AMQP.Queue;
 
-                _amqpconn.CreateExchange(exchange, "direct");
+                _amqpconn.CreateExchange(exchange, ExchangeType.Direct.ToString());
 
                 //creo coda database
                 _amqpconn.CreateQueue(queue);
@@ -118,27 +116,13 @@ namespace Alerting
                 request.Type = AMQPMessageType.Query;
 
                 var json = JsonConvert.SerializeObject(request);
-
-
-                //var _amqpconn = new ClientAMQP();
-                //var exchange = _config.Communications.AMQP.Exchange;
-                //var queue = _config.Communications.AMQP.Queue;
-
-                //_amqpconn.CreateExchange(exchange, "direct");
-
-                //creo coda database
-
-                //bind coda database a exchange e routing key 'database' 
-                //riservato per le comunicazioni al modulo alerting (es. risposta query al modulo Dabase)
-
-
-                //var channel = _amqpconn.CreateChannel();
+                //Inizializzo nuovo canale dedicato e riservato al thread corrente
                 var channel = _amqpconn.CreateChannel();
-
+                //Scrivo messaggio query sul canale appena creato
                 await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json, channel);
+                //Chiudo canale
                 _amqpconn.CloseChannel(channel);
-
-               // _amqpconn.Close();
+               
             }
             catch (Exception e)
             {
