@@ -87,7 +87,7 @@ namespace Alerting
 
                 //LoadRules(filePath);
 
-                //refreshRule = new Timer(StartTasksToDB, null, 0, 10000);
+                refreshRule = new Timer(StartTasksToDB, null, 0, 10000);
                 // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
 
                 // GetTelemetryFromDB("DISP_123", 3600 * 24 * 3,"tensione_entrata");
@@ -127,13 +127,12 @@ namespace Alerting
                 _amqpconn.CreateExchange(exchange, "direct");
 
                 //creo coda database
-                _amqpconn.CreateQueue(queue);
+
                 //bind coda database a exchange e routing key 'database' 
                 //riservato per le comunicazioni al modulo alerting (es. risposta query al modulo Dabase)
-                _amqpconn.BindQueue(queue, exchange, "alerting");
 
 
-               // var channel = _amqpconn.CreateChannel();
+                //var channel = _amqpconn.CreateChannel();
 
                 await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json);
 
@@ -293,8 +292,8 @@ namespace Alerting
                     {
                         string b = $"{m};{regola.Period};{regola.Field}";
                         // il task sia avvia subito e con una certa frequenza definita da regola.Frequency
-                        //Timer t = new Timer(RequestQuery, b, 0, (int)regola.Frequency * 1000);
-                       // listaThread.Add(t);
+                        Timer t = new Timer(RequestQuery, b, 0, (int)regola.Frequency * 1000);
+                        listaThread.Add(t);
                     }
                 }
             }

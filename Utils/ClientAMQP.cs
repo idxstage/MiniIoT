@@ -107,9 +107,8 @@ namespace Utils
                 factory.Password = config.Communications.AMQP.Password;
                 factory.HostName = config.Communications.AMQP.Ip;
                 factory.Port = config.Communications.AMQP.Port;
-                factory.VirtualHost = config.Communications.AMQP.VirtualHost;
-                factory.RequestedHeartbeat = new TimeSpan(0, 2, 0);
-                factory.RequestedConnectionTimeout = new TimeSpan(0, 2, 0);
+                factory.AutomaticRecoveryEnabled = true;
+                factory.VirtualHost = config.Communications.AMQP.VirtualHost;               
                 //inizializzazione connessione e canale di comunicazione
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
@@ -156,10 +155,13 @@ namespace Utils
 
                     //send            
                     var body = Encoding.UTF8.GetBytes(message);
-                    _channel.BasicPublish(exchange: exchange,
+                    lock (_channel)
+                    {
+                        _channel.BasicPublish(exchange: exchange,
                                          routingKey: routingKey,
                                          basicProperties: null,
                                          body: body);
+                    }               
 
                     
                     //output console 
@@ -180,39 +182,7 @@ namespace Utils
         }
 
 
-        //TEMPORANEO: PER TESTING
-        public async Task SendMessageAsync(String exchange, String routingKey, String message, IModel channel)
-        {
-            try
-            {
-                await Task.Run(() =>
-                {
-                    //preconditions 
-                    if (String.IsNullOrEmpty(message)) throw new ArgumentNullException();
-
-                    //IBasicProperties props = _channel.CreateBasicProperties();
-                    //props.Headers = new Dictionary<string, object>();
-                    //props.Headers.Add("type", type);
-
-                    //send            
-                    var body = Encoding.UTF8.GetBytes(message);
-                    channel.BasicPublish(exchange: exchange,
-                                         routingKey: routingKey,
-                                         basicProperties: null,
-                                         body: body);
-
-
-                    //output console 
-                    Console.WriteLine(" [x] Sent {0}", message);
-                    log.InfoFormat("+MESSAGE-SEND: PAYLOAD: {0}", message);
-                });
-            }
-
-            catch (Exception e)
-            {
-                log.ErrorFormat("!ERROR: {0}", e.ToString());
-            }
-        }
+        
 
 
         public void ReceiveMessageAsync(string queueName)
@@ -232,9 +202,12 @@ namespace Utils
                     OnAMQPMessageReceived(message);
                     await Task.Yield();
                 };
-                _channel.BasicConsume(queue: queueName,
-                                     autoAck: true,
-                                     consumer: consumer);
+                lock (_channel)
+                {
+                    _channel.BasicConsume(queue: queueName,
+                                         autoAck: true,
+                                         consumer: consumer);
+                }
             }
             catch (Exception e)
             {
