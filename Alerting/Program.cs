@@ -120,11 +120,11 @@ namespace Alerting
                 var json = JsonConvert.SerializeObject(request);
 
 
-                var _amqpconn = new ClientAMQP();
-                var exchange = _config.Communications.AMQP.Exchange;
-                var queue = _config.Communications.AMQP.Queue;
+                //var _amqpconn = new ClientAMQP();
+                //var exchange = _config.Communications.AMQP.Exchange;
+                //var queue = _config.Communications.AMQP.Queue;
 
-                _amqpconn.CreateExchange(exchange, "direct");
+                //_amqpconn.CreateExchange(exchange, "direct");
 
                 //creo coda database
 
@@ -133,10 +133,12 @@ namespace Alerting
 
 
                 //var channel = _amqpconn.CreateChannel();
+                var channel = _amqpconn.CreateChannel();
 
-                await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json);
+                await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json, channel);
+                _amqpconn.CloseChannel(channel);
 
-                _amqpconn.Close();
+               // _amqpconn.Close();
             }
             catch (Exception e)
             {

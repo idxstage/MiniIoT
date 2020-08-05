@@ -176,13 +176,54 @@ namespace Utils
             }
         }
 
+
+        public async Task SendMessageAsync(String exchange, String routingKey, String message, IModel chan)
+        {
+            try
+            {
+                await Task.Run(() =>
+                {
+                    //preconditions 
+                    if (String.IsNullOrEmpty(message)) throw new ArgumentNullException();
+
+                    //IBasicProperties props = _channel.CreateBasicProperties();
+                    //props.Headers = new Dictionary<string, object>();
+                    //props.Headers.Add("type", type);
+
+                    //send            
+                    var body = Encoding.UTF8.GetBytes(message);
+                    lock (chan)
+                    {
+                        chan.BasicPublish(exchange: exchange,
+                                         routingKey: routingKey,
+                                         basicProperties: null,
+                                         body: body);
+                    }
+
+
+                    //output console 
+                    Console.WriteLine(" [x] Sent {0}", message);
+                    log.InfoFormat("+MESSAGE-SEND: PAYLOAD: {0}", message);
+                });
+            }
+
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
+        }
+
         public IModel CreateChannel()
         {
             return _connection.CreateModel();
         }
 
+        public void CloseChannel(IModel chan)
+        {
+       //     chan.Dispose();
+            chan.Close();
+        }
 
-        
 
 
         public void ReceiveMessageAsync(string queueName)
@@ -213,6 +254,39 @@ namespace Utils
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }       
+        }
+
+
+
+
+        public void ReceiveMessageAsync(string queueName, IModel chan)
+        {
+            try
+            {
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+                String message = "";
+                consumer.Received += async (model, ea) =>
+                {
+
+                    var body = ea.Body;
+
+                    message = Encoding.UTF8.GetString(body.ToArray());
+                    //Console.WriteLine(" [x] Msg:  {0}", message);
+                    log.InfoFormat("+MESSAGE-READ: PAYLOAD: {0}", message);
+                    OnAMQPMessageReceived(message);
+                    await Task.Yield();
+                };
+                lock (chan)
+                {
+                    chan.BasicConsume(queue: queueName,
+                                         autoAck: true,
+                                         consumer: consumer);
+                }
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
         }
     }
 }
