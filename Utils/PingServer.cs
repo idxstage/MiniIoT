@@ -1,6 +1,10 @@
-﻿using System;
+﻿using log4net;
+using log4net.Config;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 
@@ -8,9 +12,12 @@ namespace Utils
 {
     public class PingServer
     {
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public PingServer(string ip, int port)
         {
-            
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
             var listener = new HttpListener();
 
             listener.Prefixes.Add($"http://{ip}:{port}/"); // ip e porta in ascolto del server
@@ -45,9 +52,9 @@ namespace Utils
                 context.Response.OutputStream.Write(bytes, 0, bytes.Length);
 
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // Client che si disconnette per un qualche motivo
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
         }
     }

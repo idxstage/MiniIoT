@@ -219,8 +219,7 @@ namespace Utils
         }
 
         public void CloseChannel(IModel chan)
-        {
-       //     chan.Dispose();
+        {      
             chan.Close();
         }
 
