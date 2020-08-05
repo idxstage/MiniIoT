@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using log4net.Config;
+using System.Reflection;
 
 namespace Utils
 {
@@ -26,15 +27,23 @@ namespace Utils
         private readonly IMqttServer _mqttServer;
         private readonly int port;        
         private readonly List<User> users;
-        private static readonly ILog log = LogManager.GetLogger(typeof(ServerMQTT));
-        
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public ServerMQTT()
         {
-            Config config = Utils.ReadConfiguration();          
-            _mqttServer = new MqttFactory().CreateMqttServer();
-            port = config.Communications.MQTT.Port;           
-            users = config.Communications.MQTT.Users;
-            //XmlConfigurator.Configure(Utils.GetLog4NetRepository());
+            try
+            {
+                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+                XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+                Config config = Utils.ReadConfiguration();
+                _mqttServer = new MqttFactory().CreateMqttServer();
+                port = config.Communications.MQTT.Port;
+                users = config.Communications.MQTT.Users;
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }          
         }
 
         protected virtual void OnMQTTMessageReceived(String telemetria)
@@ -48,10 +57,7 @@ namespace Utils
             var optionsBuilder = new MqttServerOptionsBuilder()
                 .WithDefaultEndpoint().WithDefaultEndpointPort(port).WithConnectionBacklog(100).WithConnectionValidator(
                 c =>
-                {
-                    //autenticazione utente 
-                    //TODO: autenticazione utente da db. Per il momento per semplicità le credenziali degli utenti sono memorizzate in config.json  
-
+                {                  
                     var currentUser = users.FirstOrDefault(u => u.UserName == c.Username);
 
                     if (currentUser == null)
@@ -76,7 +82,7 @@ namespace Utils
                     }
 
                     c.ReasonCode = MqttConnectReasonCode.Success;
-                    //log
+                    
                 });
 
             // e avviamo il server in modalità asincrona
@@ -93,22 +99,30 @@ namespace Utils
 
         public void ReceiveAsync()
         {
-            _mqttServer.UseApplicationMessageReceivedHandler(e =>
+            try
             {
-                String payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                Console.WriteLine("--- Messaggio ricevuto ---");
-                Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
-                Console.WriteLine($"+ Payload = {payload}");
-                Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}"); // solitamente settato a 0
-                Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
-                Console.WriteLine();
+                _mqttServer.UseApplicationMessageReceivedHandler(e =>
+                {
+                    String payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                    Console.WriteLine("--- Messaggio ricevuto ---");
+                    Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
+                    Console.WriteLine($"+ Payload = {payload}");
+                    Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}"); // solitamente settato a 0
+                    Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
+                    Console.WriteLine();
 
-                //log su Log4Net
-                log.InfoFormat("+MESSAGE-READ: PAYLOAD: {0} -- TOPIC: {1}", payload,e.ApplicationMessage.Topic);
-                
-                //invoca evento
-                OnMQTTMessageReceived(payload);
-            });                      
+                    //log su Log4Net
+                    log.InfoFormat("+MESSAGE-READ: PAYLOAD: {0} -- TOPIC: {1}", payload, e.ApplicationMessage.Topic);
+
+                    //invoca evento
+                    OnMQTTMessageReceived(payload);
+                });
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
+                           
         }
 
         public async void SendAsync(string topic, string payload)
