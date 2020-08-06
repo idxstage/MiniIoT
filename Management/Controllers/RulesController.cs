@@ -14,6 +14,9 @@ using com.sun.org.apache.xpath.@internal.axes;
 using System.Net.Http;
 using log4net;
 using System.Reflection;
+using MongoDB.Bson.IO;
+using Newtonsoft.Json;
+using System.Net.Http.Headers;
 
 namespace Management.Controllers
 {
@@ -131,7 +134,7 @@ namespace Management.Controllers
                 return Json(new { result = false });
         }
 
-        public async void SendThreshold(Modulo modulo)
+        public async void SendThreshold()
         {
             try
             {
@@ -139,15 +142,29 @@ namespace Management.Controllers
                 var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
                 var filePath = $"{currentPath}\\Dashboard.json";
                 GrafanaModel model;
-                if (File.Exists(filePath))
+                if (System.IO.File.Exists(filePath))
                 {
                     using var r = new StreamReader(filePath);
                     var json = r.ReadToEnd();
-                    model = JsonConvert.DeserializeObject<GrafanaModel>(json);
+                    model = Newtonsoft.Json.JsonConvert.DeserializeObject<GrafanaModel>(json);
+                    
+                    //operazioni json
+
+
+
+                    HttpRequestMessage h = new HttpRequestMessage();
+                    var jsonDashboard = Newtonsoft.Json.JsonConvert.SerializeObject(model); 
+
+                    Uri uri = new Uri($"http://10.0.0.73:3000/api/dashboards/db");
+                    h.RequestUri = uri;
+                    h.Method = HttpMethod.Post;
+                    h.Content = new StringContent(jsonDashboard);
+                    h.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "eyJrIjoid1M3RWo2N1UwdFJRYWpSZEViTWZMeFJKNHJqMmdBOVEiLCJuIjoiTWluaUlvVCIsImlkIjoxfQ==");
+                    HttpResponseMessage response = await client.SendAsync(h);
 
                 }
 
-                //modifico json 
+
 
 
 
@@ -155,13 +172,6 @@ namespace Management.Controllers
 
 
 
-
-                HttpRequestMessage h = new HttpRequestMessage();
-
-                Uri uri = new Uri($"http://{modulo.Ip}:{modulo.Port}/api/dashboards/db");
-                h.RequestUri = uri;
-                h.Method = HttpMethod.Post;
-                HttpResponseMessage response = await client.SendAsync(h);
             }
             catch(HttpRequestException e)
             {
