@@ -29,6 +29,7 @@ namespace Management.Controllers
         private readonly IMongoCollection<Models.Rule> _rulesCollection;
         static readonly HttpClient client = new HttpClient();
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+       
 
         public IActionResult Index()
         {
@@ -99,6 +100,8 @@ namespace Management.Controllers
         {
             //inserimento su database
             await _rulesCollection.InsertOneAsync(rule);
+            if (_config.Grafana.Enabled)
+                SendThreshold();
             return Json(new { result = true });
         }
 
@@ -118,7 +121,11 @@ namespace Management.Controllers
                                                                                                             .Set(r => r.actions, rule.actions));
 
             if (result.IsAcknowledged && result.ModifiedCount > 0)
+            {
+                if (_config.Grafana.Enabled)
+                    SendThreshold();
                 return Json(new { result = true });
+            }
             else
                 return Json(new { result = false });
 
@@ -128,99 +135,105 @@ namespace Management.Controllers
         {
 
             var result = await _rulesCollection.DeleteOneAsync(r => r.Id == id);
-            if (result.IsAcknowledged && result.DeletedCount > 0)            
-                return Json(new { result = true });           
+            if (result.IsAcknowledged && result.DeletedCount > 0)
+            {
+                if(_config.Grafana.Enabled)
+                    SendThreshold();
+                return Json(new { result = true });
+
+            }
             else
                 return Json(new { result = false });
+       
+            
+        
         }
 
         public async void SendThreshold()
         {
             try
             {
-                //leggo json dashboard
-                var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-                var filePath = $"{currentPath}\\Dashboard.json";
-                GrafanaModel model;
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                if (System.IO.File.Exists(filePath))
+                //recupero json dashboard da Grafana (in modo tale da avere sempre la versione aggiornata)
+                HttpRequestMessage h = new HttpRequestMessage();
+
+                var dashId = "Z72jNMSMk";
+
+
+                Uri uri = new Uri($"http://10.0.0.73:3000/api/dashboards/uid/{dashId}");
+                h.RequestUri = uri;
+
+                h.Method = HttpMethod.Get;
+                h.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "eyJrIjoiaVRPQlo3ODI2aDlnQ3RwRUdEUnAyMFUxelE3Y1VZdWMiLCJuIjoiUHJvdmEiLCJpZCI6MX0=");
+                HttpResponseMessage response = await client.SendAsync(h);
+                String dashboardJson = await response.Content.ReadAsStringAsync();
+
+                var dashboardModel = Newtonsoft.Json.JsonConvert.DeserializeObject<GrafanaModel>(dashboardJson);
+                dashboardModel.Overwrite = true;
+
+                //operazioni json
+
+                var rules = await _rulesCollection.Find(Builders<Models.Rule>.Filter.Empty).ToListAsync();
+
+                //reset soglie
+
+                foreach (Panel panel in dashboardModel.Dashboard.Panels)
                 {
-                   
-
-                    using var r = new StreamReader(filePath);
-                    var json = r.ReadToEnd();
-                    model = Newtonsoft.Json.JsonConvert.DeserializeObject<GrafanaModel>(json);
-
-                    //operazioni json
-                   
-                    var rules = await _rulesCollection.Find(Builders<Models.Rule>.Filter.Empty).ToListAsync();
-
-                    //reset soglie
-
-                    foreach (Panel panel in model.Dashboard.Panels)
-                    {
-                        panel.Thresholds = new List<Threshold>();
-                    }
-
-
-                    foreach (Models.Rule rule in rules)
-                    {
-                        String fieldName = rule.Field;
-                        Panel tempPanel = model.Dashboard.Panels.Find(x => x.Description.Equals(fieldName));
-
-
-                        Threshold t = new Threshold();
-                        t.ColorMode = "Critical";
-                        t.Fill = true;
-                        t.Line = true;
-                        t.Yaxis = "left";
-                        t.Value = Convert.ToInt64(rule.Value);
-
-                        switch (rule.ConditionOperator)
-                        {
-                            case ">":
-                                t.Op = "gt";
-                                break;
-                            case ">=":
-                                t.Op = "gt";
-                                break;
-                            case "<":
-                                t.Op = "lt";
-                                break;
-                            case "<=":
-                                t.Op = "lt";
-                                break;
-                        }
-
-                        tempPanel.Thresholds.Add(t);
-                    }
-
-
-
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    HttpRequestMessage h = new HttpRequestMessage();
-                    var jsonDashboard = Newtonsoft.Json.JsonConvert.SerializeObject(model);
-
-                    Uri uri = new Uri($"http://10.0.0.73:3000/api/dashboards/db");
-                    h.RequestUri = uri;
-
-
-                    
-                    h.Method = HttpMethod.Post;
-                    h.Content = new StringContent(jsonDashboard);
-
-                    h.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "eyJrIjoiaVRPQlo3ODI2aDlnQ3RwRUdEUnAyMFUxelE3Y1VZdWMiLCJuIjoiUHJvdmEiLCJpZCI6MX0=");
-
-                    h.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                    HttpResponseMessage response = await client.SendAsync(h);
+                    panel.Thresholds = new List<Threshold>();
                 }
 
-                //modifico json 
+
+                foreach (Models.Rule rule in rules)
+                {
+                    String fieldName = rule.Field;
+                    Panel tempPanel = dashboardModel.Dashboard.Panels.Find(x => x.Description != null && x.Description.Equals(fieldName));
+
+
+                    Threshold t = new Threshold();
+                    t.ColorMode = "critical";
+                    t.Fill = true;
+                    t.Line = true;
+                    t.Yaxis = "left";
+                    t.Value = Convert.ToInt64(rule.Value);
+
+                    switch (rule.ConditionOperator)
+                    {
+                        case ">":
+                            t.Op = "gt";
+                            break;
+                        case ">=":
+                            t.Op = "gt";
+                            break;
+                        case "<":
+                            t.Op = "lt";
+                            break;
+                        case "<=":
+                            t.Op = "lt";
+                            break;
+                    }
+
+                    tempPanel.Thresholds.Add(t);
+                }
+
+
+                //aggiornamento dashboard su Grafana
+
+                dashboardJson = Newtonsoft.Json.JsonConvert.SerializeObject(dashboardModel);
+                h = new HttpRequestMessage();
+                uri = new Uri($"http://10.0.0.73:3000/api/dashboards/db");
+                h.RequestUri = uri;
+                h.Method = HttpMethod.Post;
+                h.Content = new StringContent(dashboardJson);
+                h.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                h.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "eyJrIjoiaVRPQlo3ODI2aDlnQ3RwRUdEUnAyMFUxelE3Y1VZdWMiLCJuIjoiUHJvdmEiLCJpZCI6MX0=");
+                response = await client.SendAsync(h);
+                h.Dispose();
+                
 
 
 
-                //invio json 
-
+                
             }
             catch(HttpRequestException e)
             {

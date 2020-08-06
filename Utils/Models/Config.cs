@@ -22,6 +22,13 @@ namespace Utils
         public Monitoring Monitoring { get; set; }
 
         public MongoDB MongoDB { get; set; }
+
+        public Grafana Grafana { get; set; }
+    }
+
+    public class Grafana
+    {
+        public bool Enabled { get; set; }
     }
     public class InfluxDB
     {
