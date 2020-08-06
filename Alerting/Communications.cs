@@ -95,14 +95,19 @@ namespace Alerting
 				// si arrangia col protocollo
 				oServer.ConnectType = SmtpConnectType.ConnectSSLAuto;
 
-				//oSmtp.SendMail(oServer, oMail);
-				//messaggi.Add(oServer, oMail);
-				Coppia l = new Coppia();
-				l.mail = oMail;
-				l.server = oServer;
-				messaggi.Add(l);
 
-				
+				EASendMail.SmtpClient oSmtp = new EASendMail.SmtpClient();
+				if (campiTele.ContainsValue("Instant")) // accumuliamo le istantanee
+                {
+					Coppia l = new Coppia();
+					l.server = oServer;
+					l.mail = oMail;
+					messaggi.Add(l);
+				}
+				else
+					oSmtp.SendMail(oServer, oMail); // inviamo il resto
+
+
 			}
 
 			catch(Exception e)

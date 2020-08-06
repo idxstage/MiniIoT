@@ -39,7 +39,7 @@ namespace Alerting
         private static IMongoCollection<Rule> _rulesCollection;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static Timer refreshRule;
-        private static Timer sendMails;
+        private static Timer sendMailsInstant;
 
         static void Main(string[] args)
         {
@@ -87,7 +87,7 @@ namespace Alerting
                 // avvio timer regole ed email
 
                 refreshRule = new Timer(StartTasksToDB, null, 0, 10000); // 10 secondi
-                sendMails = new Timer(Communications.SendAll, null, 60000, 60000); // 1 minuto
+                sendMailsInstant = new Timer(Communications.SendAll, null, 60000, 60000); // 1 minuto
 
 
                 Console.ReadLine();
@@ -130,9 +130,9 @@ namespace Alerting
 
         }
 
+
         public async static void OnAMQPMessageReceived(object sender, String msg)
         {
-
             try
             {
                 var message = JsonConvert.DeserializeObject<AMQPMessage>(msg);
