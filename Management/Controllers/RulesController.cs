@@ -133,7 +133,7 @@ namespace Management.Controllers
                 return Json(new { result = false });
         }
 
-        public async void SendThreshold()
+        public async void SendThreshold(string field, string conditionOperator, string value)
         {
             try
             {
@@ -151,18 +151,26 @@ namespace Management.Controllers
                     model = Newtonsoft.Json.JsonConvert.DeserializeObject<GrafanaModel>(json);
 
                     //operazioni json
+                    Panel p = model.Dashboard.Panels.Find(x => x.Description != null && x.Description.Equals(field));
 
-                    
 
+
+
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     HttpRequestMessage h = new HttpRequestMessage();
                     var jsonDashboard = Newtonsoft.Json.JsonConvert.SerializeObject(model);
 
                     Uri uri = new Uri($"http://10.0.0.73:3000/api/dashboards/db");
                     h.RequestUri = uri;
+
+
+                    
                     h.Method = HttpMethod.Post;
-                    h.Headers.
                     h.Content = new StringContent(jsonDashboard);
+
                     h.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "eyJrIjoiaVRPQlo3ODI2aDlnQ3RwRUdEUnAyMFUxelE3Y1VZdWMiLCJuIjoiUHJvdmEiLCJpZCI6MX0=");
+
+                    h.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                     HttpResponseMessage response = await client.SendAsync(h);
                 }
 
