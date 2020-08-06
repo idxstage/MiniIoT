@@ -15,6 +15,7 @@ using System.Net.Http;
 using log4net;
 using System.Reflection;
 using Newtonsoft.Json;
+using System.Net.Http.Headers;
 
 namespace Management.Controllers
 {
@@ -132,63 +133,44 @@ namespace Management.Controllers
                 return Json(new { result = false });
         }
 
-        public async void SendThreshold(Modulo modulo, string field, string value, string conditionOperator)
+        public async void SendThreshold()
         {
             try
             {
                 //leggo json dashboard
                 var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
                 var filePath = $"{currentPath}\\Dashboard.json";
-                GrafanaModel model = null;
+                GrafanaModel model;
 
                 if (System.IO.File.Exists(filePath))
                 {
+                   
+
                     using var r = new StreamReader(filePath);
                     var json = r.ReadToEnd();
-                    model = JsonConvert.DeserializeObject<GrafanaModel>(json);
+                    model = Newtonsoft.Json.JsonConvert.DeserializeObject<GrafanaModel>(json);
+
+                    //operazioni json
+
+
+
+                    HttpRequestMessage h = new HttpRequestMessage();
+                    var jsonDashboard = Newtonsoft.Json.JsonConvert.SerializeObject(model);
+
+                    Uri uri = new Uri($"http://10.0.0.73:3000/api/dashboards/db");
+                    h.RequestUri = uri;
+                    h.Method = HttpMethod.Post;
+                    h.Content = new StringContent(jsonDashboard);
+                    h.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "eyJrIjoid1M3RWo2N1UwdFJRYWpSZEViTWZMeFJKNHJqMmdBOVEiLCJuIjoiTWluaUlvVCIsImlkIjoxfQ==");
+                    HttpResponseMessage response = await client.SendAsync(h);
                 }
 
                 //modifico json 
-                Panel p = model.Panels.Find(x => x.Description.Equals(field));
-                Threshold t = new Threshold();
-                t.ColorMode = "Critical";
-                t.Fill = true;
-                t.Line = true;
-                t.Value = Convert.ToInt64(value);
-                t.Yaxis = "left";
 
 
-                switch (conditionOperator)
-                {
-                    case ">=":
-                        t.Op = "gt";
-                        break;
-                    case ">":
-                        t.Op = "gt";
-                        break;
-                    case "<=":
-                        t.Op = "lt";
-                        break;
-                    case "<":
-                        t.Op = "lt";
-                        break;
-                }
 
-                p.Thresholds.Add(t);
-
-                string js = JsonConvert.SerializeObject(model);
-
-  
                 //invio json 
-                HttpRequestMessage h = new HttpRequestMessage();
 
-                Uri uri = new Uri($"http://{modulo.Ip}:{modulo.Port}/api/dashboards/db");
-                h.RequestUri = uri;
-                h.Method = HttpMethod.Post;
-                h.Content = new StringContent(js);
-                //h.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue();
-
-                HttpResponseMessage response = await client.SendAsync(h);
             }
             catch(HttpRequestException e)
             {
