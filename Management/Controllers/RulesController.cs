@@ -16,6 +16,7 @@ using log4net;
 using System.Reflection;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
+using com.sun.xml.@internal.fastinfoset.util;
 
 namespace Management.Controllers
 {
@@ -153,7 +154,30 @@ namespace Management.Controllers
                     //operazioni json
                     Panel p = model.Dashboard.Panels.Find(x => x.Description != null && x.Description.Equals(field));
 
+                    Threshold t = new Threshold();
+                    t.ColorMode = "Critical";
+                    t.Fill = true;
+                    t.Line = true;
+                    t.Yaxis = "left";
+                    t.Value = Convert.ToInt64(value);
 
+                    switch(conditionOperator)
+                    {
+                        case ">":
+                            t.Op = "gt";
+                            break;
+                        case ">=":
+                            t.Op = "gt";
+                            break;
+                        case "<":
+                            t.Op = "lt";
+                            break;
+                        case "<=":
+                            t.Op = "lt";
+                            break;
+                    }
+
+                    p.Thresholds.Add(t); // aggiungiamo il threshold
 
 
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
