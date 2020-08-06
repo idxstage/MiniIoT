@@ -135,6 +135,27 @@ namespace Management.Controllers
         {
             try
             {
+                //leggo json dashboard
+                var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                var filePath = $"{currentPath}\\Dashboard.json";
+                GrafanaModel model;
+                if (File.Exists(filePath))
+                {
+                    using var r = new StreamReader(filePath);
+                    var json = r.ReadToEnd();
+                    model = JsonConvert.DeserializeObject<Config>(json);
+
+                }
+
+                //modifico json 
+
+
+
+                //invio json 
+
+
+
+
                 HttpRequestMessage h = new HttpRequestMessage();
 
                 Uri uri = new Uri($"http://{modulo.Ip}:{modulo.Port}/api/dashboards/db");
