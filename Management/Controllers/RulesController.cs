@@ -143,7 +143,7 @@ namespace Management.Controllers
                 {
                     using var r = new StreamReader(filePath);
                     var json = r.ReadToEnd();
-                    model = JsonConvert.DeserializeObject<Config>(json);
+                    model = JsonConvert.DeserializeObject<GrafanaModel>(json);
 
                 }
 
