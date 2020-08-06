@@ -11,6 +11,9 @@ using Management.Models;
 using Alerting.Model;
 using FileM.Models;
 using com.sun.org.apache.xpath.@internal.axes;
+using System.Net.Http;
+using log4net;
+using System.Reflection;
 
 namespace Management.Controllers
 {
@@ -21,6 +24,9 @@ namespace Management.Controllers
         private readonly IMongoClient _client;
         private static IMongoDatabase _database;
         private readonly IMongoCollection<Models.Rule> _rulesCollection;
+        static readonly HttpClient client = new HttpClient();
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public IActionResult Index()
         {
             return View();
@@ -125,6 +131,21 @@ namespace Management.Controllers
                 return Json(new { result = false });
         }
 
+        public async void SendThreshold(Modulo modulo)
+        {
+            try
+            {
+                HttpRequestMessage h = new HttpRequestMessage();
 
+                Uri uri = new Uri($"http://{modulo.Ip}:{modulo.Port}/api/dashboards/db");
+                h.RequestUri = uri;
+                h.Method = HttpMethod.Post;
+                HttpResponseMessage response = await client.SendAsync(h);
+            }
+            catch(HttpRequestException e)
+            {
+                log.Error($"Error: {e.Message}");
+            }  
+        }
     }
 }
