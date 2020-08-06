@@ -157,11 +157,11 @@ namespace Management.Controllers
                     HttpRequestMessage h = new HttpRequestMessage();
                     var jsonDashboard = Newtonsoft.Json.JsonConvert.SerializeObject(model);
 
-                    Uri uri = new Uri($"http://10.0.0.73:3000/api/dashboards/db");
+                    Uri uri = new Uri($"http://10.0.0.73:3000/api/dashboards/home/org");
                     h.RequestUri = uri;
                     h.Method = HttpMethod.Post;
-                    h.Content = new StringContent(jsonDashboard);
-                    h.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "eyJrIjoid1M3RWo2N1UwdFJRYWpSZEViTWZMeFJKNHJqMmdBOVEiLCJuIjoiTWluaUlvVCIsImlkIjoxfQ==");
+                   // h.Content = new StringContent(jsonDashboard);
+                    h.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "eyJrIjoiTVdNUmxVRUJSS2tzZFM4T3Q1QUdsN3pYQzNCRUVTSksiLCJuIjoiVGVzdCIsImlkIjoxfQ==");
                     HttpResponseMessage response = await client.SendAsync(h);
                 }
 
