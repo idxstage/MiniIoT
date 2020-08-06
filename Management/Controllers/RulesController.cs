@@ -134,7 +134,7 @@ namespace Management.Controllers
                 return Json(new { result = false });
         }
 
-        public async void SendThreshold(string field, string conditionOperator, string value)
+        public async void SendThreshold()
         {
             try
             {
@@ -152,32 +152,49 @@ namespace Management.Controllers
                     model = Newtonsoft.Json.JsonConvert.DeserializeObject<GrafanaModel>(json);
 
                     //operazioni json
-                    Panel p = model.Dashboard.Panels.Find(x => x.Description != null && x.Description.Equals(field));
+                   
+                    var rules = await _rulesCollection.Find(Builders<Models.Rule>.Filter.Empty).ToListAsync();
 
-                    Threshold t = new Threshold();
-                    t.ColorMode = "Critical";
-                    t.Fill = true;
-                    t.Line = true;
-                    t.Yaxis = "left";
-                    t.Value = Convert.ToInt64(value);
+                    //reset soglie
 
-                    switch(conditionOperator)
+                    foreach (Panel panel in model.Dashboard.Panels)
                     {
-                        case ">":
-                            t.Op = "gt";
-                            break;
-                        case ">=":
-                            t.Op = "gt";
-                            break;
-                        case "<":
-                            t.Op = "lt";
-                            break;
-                        case "<=":
-                            t.Op = "lt";
-                            break;
+                        panel.Thresholds = new List<Threshold>();
                     }
 
-                    p.Thresholds.Add(t); // aggiungiamo il threshold
+
+                    foreach (Models.Rule rule in rules)
+                    {
+                        String fieldName = rule.Field;
+                        Panel tempPanel = model.Dashboard.Panels.Find(x => x.Description.Equals(fieldName));
+
+
+                        Threshold t = new Threshold();
+                        t.ColorMode = "Critical";
+                        t.Fill = true;
+                        t.Line = true;
+                        t.Yaxis = "left";
+                        t.Value = Convert.ToInt64(rule.Value);
+
+                        switch (rule.ConditionOperator)
+                        {
+                            case ">":
+                                t.Op = "gt";
+                                break;
+                            case ">=":
+                                t.Op = "gt";
+                                break;
+                            case "<":
+                                t.Op = "lt";
+                                break;
+                            case "<=":
+                                t.Op = "lt";
+                                break;
+                        }
+
+                        tempPanel.Thresholds.Add(t);
+                    }
+
 
 
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
