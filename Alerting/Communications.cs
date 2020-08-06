@@ -22,11 +22,20 @@ namespace Alerting
 		public SmtpServer server;
 		public SmtpMail mail;
     }
+	class Slack
+    {
+		public SlackClient client;
+		public string channel;
+		public string text;
+    }
     class Communications
     {
 		private static readonly ILog log = LogManager.GetLogger(typeof(Communications));
 
-		static List<Coppia> messaggi = new List<Coppia>();
+		public static List<Coppia> messaggi = new List<Coppia>();
+		public static List<Slack> slacks = new List<Slack>();
+		static Config c = Utils.Utils.ReadConfiguration();
+
 		public Communications()
         {
 			messaggi = new List<Coppia>();
@@ -36,8 +45,6 @@ namespace Alerting
 		{
 			try
 			{
-				Config c = Utils.Utils.ReadConfiguration();
-
 
 				SmtpMail oMail = new SmtpMail("TryIt");
 
@@ -132,6 +139,18 @@ namespace Alerting
 
 					messaggi.Clear();
 				}
+
+				if (slacks.Count > 0)
+				{
+					foreach (Slack s in slacks)
+					{
+						   s.client.PostMessage(username: c.Communications.Slack.UserName,
+						   text: s.text,
+						   channel: s.channel);
+					}
+
+					slacks.Clear();
+				}
 			}
 			
 			catch (Exception e)
@@ -140,24 +159,36 @@ namespace Alerting
 			}
 		}
 
-		public static void SendMessageSlack(string text, string address)
+		public static void SendMessageSlack(string text, string address, bool instant)
         {
 			// canale miniIoT che fa appoggio alle api di slack: https://api.slack.com/apps
 
 			string channel = address.Split("|")[0];
 			string urlWithAccessToken = address.Split("|")[1];
 
-			Config c = Utils.Utils.ReadConfiguration();
+
 
 			try
 			{
 				SlackClient client = new SlackClient(urlWithAccessToken);
 
-				client.PostMessage(username: c.Communications.Slack.UserName,
+				if(instant)
+				{
+					Slack s = new Slack();
+					s.channel = channel;
+					s.client = client;
+					s.text = text;
+					slacks.Add(s);
+				}
+				else
+                {
+					client.PostMessage(username: c.Communications.Slack.UserName,
 						   text: text,
 						   channel: channel);
-
-				log.InfoFormat("+MESSAGE-SEND: From: {0} -- Text: {1}", c.Communications.Slack.UserName, text);
+					log.InfoFormat("+MESSAGE-SEND: From: {0} -- Text: {1}", c.Communications.Slack.UserName, text);
+				}
+				
+				
 			}
 			catch(Exception e)
             {

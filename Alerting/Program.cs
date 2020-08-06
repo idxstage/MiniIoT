@@ -636,8 +636,10 @@ namespace Alerting
 
                                 // alleghiamo le operazioni da fare
                                 text += "\n\nOperation to do\n" + a.body;
-
-                                Communications.SendMessageSlack(text, a.address);
+                                if(campiTele.ContainsValue("Instant"))
+                                    Communications.SendMessageSlack(text, a.address, true); // true sta per instant
+                                else
+                                    Communications.SendMessageSlack(text, a.address, false); // non instant
 
                             });
                             break;
