@@ -35,6 +35,9 @@
     "Ip": "10.0.0.73",
     "Port": 8086
   },
+  "Grafana": {
+    "Enabled":  true
+  },
   "MongoDB": {
     "ConnectionString": "mongodb://localhost:27017"
   },
