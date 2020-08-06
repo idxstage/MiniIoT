@@ -15,7 +15,17 @@ namespace Management.Models
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
 
+
+
     public partial class GrafanaModel
+    {
+        [JsonProperty("dashboard")]
+        public Dashboard Dashboard { get; set; }
+
+        [JsonProperty("overwrite")]
+        public bool Overwrite { get; set; }
+    }
+    public partial class Dashboard
     {
         [JsonProperty("annotations")]
         public Annotations Annotations { get; set; }

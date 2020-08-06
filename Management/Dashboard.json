@@ -1,4 +1,5 @@
 ﻿{
+  "dashboard": {
   "annotations": {
     "list": [
       {
@@ -1003,4 +1004,6 @@
   "title": "MiniIoT",
   "uid": "Z72jNMSMk",
   "version": 4
+},
+  "overwrite": true 
 }
