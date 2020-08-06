@@ -114,6 +114,8 @@ namespace Management.Models
 
     public partial class Panel
     {
+        [JsonProperty("content")]
+        public string Content { get; set; }
         [JsonProperty("aliasColors")]
         public AliasColors AliasColors { get; set; }
 
