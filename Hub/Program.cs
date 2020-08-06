@@ -60,7 +60,7 @@ namespace Hub
             }
             catch (Exception e)
             {
-                _log.ErrorFormat(e.ToString());
+                _log.ErrorFormat("!ERROR: {0}", e.ToString());
             }            
         }
 
@@ -83,7 +83,7 @@ namespace Hub
             }
             catch (Exception ex)
             {
-                _log.ErrorFormat(ex.ToString());                
+                _log.ErrorFormat("!ERROR: {0}", ex.ToString());
             }                  
         }
 
@@ -103,7 +103,7 @@ namespace Hub
             }
             catch (Exception ex)
             {
-                _log.ErrorFormat(ex.ToString());
+                _log.ErrorFormat("!ERROR: {0}", ex.ToString());
             }            
             
         }
