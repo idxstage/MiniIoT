@@ -14,6 +14,7 @@ using com.sun.org.apache.xpath.@internal.axes;
 using System.Net.Http;
 using log4net;
 using System.Reflection;
+using Newtonsoft.Json;
 
 namespace Management.Controllers
 {
@@ -139,7 +140,8 @@ namespace Management.Controllers
                 var currentPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
                 var filePath = $"{currentPath}\\Dashboard.json";
                 GrafanaModel model;
-                if (File.Exists(filePath))
+
+                if (System.IO.File.Exists(filePath))
                 {
                     using var r = new StreamReader(filePath);
                     var json = r.ReadToEnd();
