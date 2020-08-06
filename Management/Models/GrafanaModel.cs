@@ -114,8 +114,11 @@ namespace Management.Models
 
     public partial class Panel
     {
+        [JsonProperty("mode")]
+        public String Mode { get; set; }
         [JsonProperty("content")]
         public string Content { get; set; }
+
         [JsonProperty("aliasColors")]
         public AliasColors AliasColors { get; set; }
 
@@ -325,7 +328,7 @@ namespace Management.Models
         public string[] Params { get; set; }
 
         [JsonProperty("type")]
-        public Mode Type { get; set; }
+        public String Type { get; set; }
     }
 
     public partial class Threshold
