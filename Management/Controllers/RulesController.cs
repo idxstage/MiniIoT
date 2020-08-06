@@ -166,11 +166,11 @@ namespace Management.Controllers
                     foreach (Models.Rule rule in rules)
                     {
                         String fieldName = rule.Field;
-                        Panel tempPanel = model.Dashboard.Panels.Find(x => x.Description.Equals(fieldName));
+                        Panel tempPanel = model.Dashboard.Panels.Find(x => x.Description != null && x.Description.Equals(fieldName));
 
 
                         Threshold t = new Threshold();
-                        t.ColorMode = "Critical";
+                        t.ColorMode = "critical";
                         t.Fill = true;
                         t.Line = true;
                         t.Yaxis = "left";
@@ -197,7 +197,7 @@ namespace Management.Controllers
 
 
 
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    //client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     HttpRequestMessage h = new HttpRequestMessage();
                     var jsonDashboard = Newtonsoft.Json.JsonConvert.SerializeObject(model);
 
