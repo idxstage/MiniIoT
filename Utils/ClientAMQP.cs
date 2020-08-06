@@ -25,6 +25,40 @@ namespace Utils
         public EventHandler<String> AMQPMessageReceived;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+
+
+        public ClientAMQP()
+        {
+            try
+            {
+                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+                XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
+                Config config = Utils.ReadConfiguration();
+                var factory = new ConnectionFactory();
+                factory.DispatchConsumersAsync = true;
+                factory.UserName = config.Communications.AMQP.UserName;
+                factory.Password = config.Communications.AMQP.Password;
+                factory.HostName = config.Communications.AMQP.Ip;
+                factory.Port = config.Communications.AMQP.Port;
+                factory.AutomaticRecoveryEnabled = true;
+                factory.VirtualHost = config.Communications.AMQP.VirtualHost;
+                //inizializzazione connessione e canale di comunicazione
+                _connection = factory.CreateConnection();
+                _channel = _connection.CreateModel();
+            }
+            catch (Exception e)
+            {
+                log.Error($"ERROR: {e.Message}");
+            }
+
+        }
+
+        ~ClientAMQP()
+        {
+            Close();
+        }
+
         protected virtual void OnAMQPMessageReceived(String message)
         {
             try
@@ -86,38 +120,7 @@ namespace Utils
             }
         }
 
-        public ClientAMQP()
-        {
-            try
-            {
-                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-                XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
-
-                Config config = Utils.ReadConfiguration();
-                var factory = new ConnectionFactory();
-                factory.DispatchConsumersAsync = true;
-                factory.UserName = config.Communications.AMQP.UserName;
-                factory.Password = config.Communications.AMQP.Password;
-                factory.HostName = config.Communications.AMQP.Ip;
-                factory.Port = config.Communications.AMQP.Port;
-                factory.AutomaticRecoveryEnabled = true;
-                factory.VirtualHost = config.Communications.AMQP.VirtualHost;               
-                //inizializzazione connessione e canale di comunicazione
-                _connection = factory.CreateConnection();
-                _channel = _connection.CreateModel();
-            }
-            catch(Exception e)
-            {
-                log.Error($"ERROR: {e.Message}");
-            }      
-            
-        }
-
-        ~ClientAMQP()
-        {
-            Close();
-        } 
-     
+           
         public void Close()
         {
             try

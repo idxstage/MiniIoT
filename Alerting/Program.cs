@@ -89,6 +89,7 @@ namespace Alerting
                 refreshRule = new Timer(StartTasksToDB, null, 0, 10000); // 10 secondi
                 sendMailsInstant = new Timer(Communications.SendAll, null, 60000, 60000); // 1 minuto
 
+                log.Info("ALERTING INIZIALIZZATO CORRETTAMENTE!");
 
                 Console.ReadLine();
             }

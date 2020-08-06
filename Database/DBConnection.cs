@@ -28,20 +28,36 @@ namespace Database
         private readonly string database;
         private static readonly ILog log = LogManager.GetLogger(typeof(DBConnection));
         public DBConnection()
-        {            
-            //lettura configurazione
-            Config config = Utils.Utils.ReadConfiguration();
-            String connString = String.Format("http://{0}:{1}", config.InfluxDB.Ip, config.InfluxDB.Port);
-            //creazione client per connessione al db
-            database = config.InfluxDB.Database;
-            retentionPolicy = config.InfluxDB.RetentionPolicy;
-            client = InfluxDBClientFactory.CreateV1(connString, config.InfluxDB.Username, config.InfluxDB.Password.ToCharArray(), database, retentionPolicy);
-            if (client == null)
-                throw new Exception("Impossibile stabilire connessione con il database!");          
+        {
+            try
+            {
+                //lettura configurazione
+                Config config = Utils.Utils.ReadConfiguration();
+                String connString = String.Format("http://{0}:{1}", config.InfluxDB.Ip, config.InfluxDB.Port);
+                //creazione client per connessione al db
+                database = config.InfluxDB.Database;
+                retentionPolicy = config.InfluxDB.RetentionPolicy;
+                client = InfluxDBClientFactory.CreateV1(connString, config.InfluxDB.Username, config.InfluxDB.Password.ToCharArray(), database, retentionPolicy);
+                if (client == null)
+                    throw new Exception("Impossibile stabilire connessione con il database!");
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
+            
         }
         ~DBConnection()
         {
-            if (client != null) client.Dispose();
+            try
+            {
+                if (client != null) client.Dispose();
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
+            
         }
         
         /// <summary>

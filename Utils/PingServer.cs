@@ -15,24 +15,32 @@ namespace Utils
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public PingServer(string ip, int port)
         {
-            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
-
-            var listener = new HttpListener();
-
-            listener.Prefixes.Add($"http://{ip}:{port}/"); // ip e porta in ascolto del server
-            // avviamo il server
-            listener.Start();
-
-            while (true)
+            try
             {
+                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+                            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
-                var context = listener.GetContext();
+                            var listener = new HttpListener();
 
-                // avviamo un thread per rispondere
-                ThreadPool.QueueUserWorkItem(o => HandleRequest(context));
+                            listener.Prefixes.Add($"http://{ip}:{port}/"); // ip e porta in ascolto del server
+                            // avviamo il server
+                            listener.Start();
 
+                            while (true)
+                            {
+
+                                var context = listener.GetContext();
+
+                                // avviamo un thread per rispondere
+                                ThreadPool.QueueUserWorkItem(o => HandleRequest(context));
+
+                            }
             }
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
+            
         }
 
         private void HandleRequest(object state)

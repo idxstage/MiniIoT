@@ -65,6 +65,7 @@ namespace Database
                 _amqpconn.AMQPMessageReceived += OnAMQPMessageReceived;
                 _amqpconn.ReceiveMessageAsync(queue);
 
+                log.Info("DATABASE INIZIALIZZATO CORRETTAMENTE!");
                 Console.ReadLine();
             }
             catch (Exception e)
