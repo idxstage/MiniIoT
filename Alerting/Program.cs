@@ -654,18 +654,6 @@ namespace Alerting
             
         }
 
-        /// <summary>
-        /// Metodo che carica le regole dato un percorso
-        /// </summary>
-        /// <param name="path"></param>
-        /// 
-        private static void LoadRules(string path)
-        {
-            StreamReader sr = new StreamReader(path);
-            string s = sr.ReadToEnd();
-            rules = JsonConvert.DeserializeObject<Rules>(s);
-        }
-
         private static async void AliveServer(string ip, int port)
         {
             try
