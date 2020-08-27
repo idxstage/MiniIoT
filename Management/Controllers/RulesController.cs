@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Utils;
 using Management.Models;
-using Alerting.Model;
 using FileM.Models;
 using com.sun.org.apache.xpath.@internal.axes;
 using System.Net.Http;
