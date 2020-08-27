@@ -16,13 +16,10 @@ using Action = Alerting.Model.Action;
 using System.Threading.Tasks;
 using System.Text;
 using RabbitMQ.Client.Events;
-using Database;
 using System.Reflection.PortableExecutable;
 using System.Threading;
-using InfluxDB.Client.Api.Domain;
 using Query = Utils.Query;
 using System.Linq;
-using System.Net.WebSockets;
 using MongoDB.Driver;
 using RabbitMQ.Client;
 

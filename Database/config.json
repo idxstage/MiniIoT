@@ -11,7 +11,7 @@
     },
     "AMQP": {
       "Port": 5672,
-      "Ip": "10.0.0.73",
+      "Ip": "10.0.0.88",
       "UserName": "IoT",
       "Password": "Soluzioni.2020",
       "VirtualHost": "/",
@@ -62,7 +62,7 @@
         },
         {
           "Name": "Grafana",
-          "Ip": "10.0.0.73",
+          "Ip": "10.0.0.88",
           "Port": 3000,
           "Timing": 10
         },
@@ -74,7 +74,7 @@
         },
         {
           "Name": "RabbitMQ",
-          "Ip": "10.0.0.73",
+          "Ip": "10.0.0.88",
           "Port": 15672,
           "Timing": 10
         }
