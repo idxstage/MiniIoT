@@ -309,8 +309,6 @@ namespace Alerting
             {
                 log.Error($"Error: {e.Message}");
             }
-
-            
         }
 
         private static Dictionary<string, string> SmontaTelemetria(string telemetria)
@@ -337,7 +335,6 @@ namespace Alerting
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
                 return new Dictionary<string, string>();
             }
-            
         }
 
 

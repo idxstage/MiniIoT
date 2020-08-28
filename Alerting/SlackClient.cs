@@ -17,7 +17,14 @@ namespace Alerting
 
         public SlackClient(string urlWithAccessToken)
         {
-            _uri = new Uri(urlWithAccessToken);
+            try
+            {
+                _uri = new Uri(urlWithAccessToken);
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
         }
 
         public void PostMessage(string text, string username = null, string channel = null)
