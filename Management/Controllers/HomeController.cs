@@ -48,11 +48,6 @@ namespace Management.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public async Task<string> GetTiming()
-        {
-            return _config.Monitoring.Timing.ToString();
-        }
-
         public async Task<string> CheckAll()
         {
             string status = "";
