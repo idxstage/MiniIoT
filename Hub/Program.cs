@@ -104,7 +104,6 @@ namespace Hub
             {
                 _log.ErrorFormat("!ERROR: {0}", ex.ToString());
             }            
-            
         }
     }
 }

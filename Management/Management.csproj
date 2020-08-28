@@ -5,11 +5,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="log4net.config" />
     <Content Remove="wwwroot\config.json" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="log4net.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\lib\bootstrap-tagsinput-latest\.gitignore" />
@@ -57,11 +61,6 @@
     <Content Update="config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Log4NetConfig.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ProjectExtensions><VisualStudio><UserProperties config_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>  
 </Project>
