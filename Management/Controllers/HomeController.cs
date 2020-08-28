@@ -54,12 +54,20 @@ namespace Management.Controllers
 
         public async Task<string> CheckAll()
         {
-            string status = "";
+            try
+            {
+                string status = "";
             foreach (Modulo m in _config.Monitoring.Modules)
                 status += CheckAvailability(m).Result;
 
             // rimuoviamo l'ultimo ";"
             return status.Remove(status.Length - 1, 1);
+            }
+            catch (HttpRequestException e)
+            {
+                log.Error($"Error: {e.Message}");
+                return new String("");
+            }
         }
 
 
