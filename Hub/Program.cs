@@ -1,5 +1,4 @@
-﻿using Database;
-using log4net;
+﻿using log4net;
 using log4net.Config;
 using MQTTnet;
 using MQTTnet.Client;
@@ -105,7 +104,6 @@ namespace Hub
             {
                 _log.ErrorFormat("!ERROR: {0}", ex.ToString());
             }            
-            
         }
     }
 }

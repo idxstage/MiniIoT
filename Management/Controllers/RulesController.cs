@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Utils;
 using Management.Models;
-using Alerting.Model;
 using FileM.Models;
 using com.sun.org.apache.xpath.@internal.axes;
 using System.Net.Http;
@@ -17,7 +16,6 @@ using System.Reflection;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using com.sun.xml.@internal.fastinfoset.util;
-using InfluxDB.Client.Api.Domain;
 using Threshold = Management.Models.Threshold;
 using RabbitMQ.Client;
 

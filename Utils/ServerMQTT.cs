@@ -19,8 +19,6 @@ using System.Reflection;
 
 namespace Utils
 {
-    
-
     public class ServerMQTT
     {
         public EventHandler<String> MessageReceived;             
@@ -49,13 +47,24 @@ namespace Utils
 
         protected virtual void OnMQTTMessageReceived(String telemetria)
         {
-            if (MessageReceived != null)
-                MessageReceived(this, telemetria);
+            try
+            {
+                if (MessageReceived != null)
+                    MessageReceived(this, telemetria);
+
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
+
         }        
     
         public async void StartAsync()
-        {       
-            var optionsBuilder = new MqttServerOptionsBuilder()
+        {
+            try
+            {
+                var optionsBuilder = new MqttServerOptionsBuilder()
                 .WithDefaultEndpoint().WithDefaultEndpointPort(port).WithConnectionBacklog(100).WithConnectionValidator(
                 c =>
                 {                  
@@ -87,8 +96,7 @@ namespace Utils
                 });
 
             // e avviamo il server in modalità asincrona
-            try
-            {
+            
                 await _mqttServer.StartAsync(optionsBuilder.Build());           
             }
             catch (Exception e)

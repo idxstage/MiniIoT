@@ -59,26 +59,6 @@
                 var timer = setInterval(Ping, 3000);
             }
 
-            /*
-            function getTiming() {
-                $.ajax({
-                    type: "GET",
-                    url: "/Home/GetTiming",
-                    contentType: "application/text; charset=utf-8",
-                    dataType: "text",
-
-                    success: function (response) {
-                        return parseInt(response) * 1000;
-                    },
-                    failure: function (response) {
-                        alert("ops, qualcosa è andato storto");
-                    }
-
-                });
-            }
-            */
-
-
             function Ping() {
 
                 $.ajax({

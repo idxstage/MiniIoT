@@ -9,7 +9,6 @@ using SlackBotMessages.Models;
 using EASendMail;
 using System.Net.Mail;
 using log4net;
-using log4net.Config;
 using System.Collections;
 using Alerting.Model;
 using Action = Alerting.Model.Action;

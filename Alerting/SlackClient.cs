@@ -1,8 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using log4net;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net;
+using System.Reflection;
 using System.Text;
 
 namespace Alerting
@@ -11,10 +13,18 @@ namespace Alerting
     {
         private readonly Uri _uri;
         private readonly Encoding _encoding = new UTF8Encoding();
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public SlackClient(string urlWithAccessToken)
         {
-            _uri = new Uri(urlWithAccessToken);
+            try
+            {
+                _uri = new Uri(urlWithAccessToken);
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
         }
 
         public void PostMessage(string text, string username = null, string channel = null)
@@ -31,16 +41,23 @@ namespace Alerting
 
         public void PostMessage(Payload payload)
         {
-            string payloadJson = JsonConvert.SerializeObject(payload);
-
-            using (WebClient client = new WebClient())
+            try
             {
-                NameValueCollection data = new NameValueCollection();
-                data["payload"] = payloadJson;
+                string payloadJson = JsonConvert.SerializeObject(payload);
 
-                var response = client.UploadValues(_uri, "POST", data);
+                using (WebClient client = new WebClient())
+                {
+                    NameValueCollection data = new NameValueCollection();
+                    data["payload"] = payloadJson;
 
-                string responseText = _encoding.GetString(response);
+                    var response = client.UploadValues(_uri, "POST", data);
+
+                    string responseText = _encoding.GetString(response);
+                }
+            }
+            catch(Exception e)
+            {
+                log.Error($"Error: {e.Message}");
             }
         }
     }

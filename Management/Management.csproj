@@ -6,11 +6,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="log4net.config" />
     <Content Remove="wwwroot\config.json" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="log4net.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\lib\bootstrap-tagsinput-latest\.gitignore" />
@@ -53,18 +57,12 @@
     <PackageReference Include="Twitter.Typeahead" Version="0.11.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Alerting\Alerting.csproj" />
     <ProjectReference Include="..\Utils\Utils.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Log4NetConfig.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ProjectExtensions><VisualStudio><UserProperties config_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>  
 </Project>
