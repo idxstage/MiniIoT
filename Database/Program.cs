@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -42,7 +43,7 @@ namespace Database
                 //Inizializzazione modulo di monitoring
                 Modulo modulo = _config.Monitoring.Modules.Find(x => x.Name.Contains("Database"));
                 AliveServer(modulo.Ip, modulo.Port);
-
+                           
                 //Inizializzazione client AMQP
                 _amqpconn = new ClientAMQP();
                 var exchange = _config.Communications.AMQP.Exchange;
@@ -94,12 +95,29 @@ namespace Database
                         break;
                     //Ricezione richiesta di query da parte del microservizio DATABASE
                     case AMQPMessageType.Query:
+                        
                         var query = JsonConvert.DeserializeObject<Query>(message.Data);
                         int period = query.Period;
                         var machineId = query.MachineId;
                         var req_sender = message.Sender;
                         var field = query.Field;
-                        var result = await _dbconnection.ReadData(machineId, field, period);
+                        var type = query.Type;
+                        var result = "";
+
+                        switch (type)
+                        {
+                            case "GetMachines":
+                                result = await _dbconnection.GetMachines();
+                                break;
+                            case "GetFieldsByMachines":
+                                var machines = JsonConvert.DeserializeObject<List<String>>(field);
+                                result = await _dbconnection.GetFieldsByMachine(machines);
+                                break;
+                            default:
+                                result = await _dbconnection.ReadData(machineId, field, period);
+                                break;
+                        }
+
                         var body = new AMQPMessage { Type = AMQPMessageType.QueryResult, Data = result, Sender = _config.Communications.AMQP.Queue };
                         var json = JsonConvert.SerializeObject(body);
                         //invio risposta

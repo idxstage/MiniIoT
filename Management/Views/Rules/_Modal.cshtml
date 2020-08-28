@@ -1,6 +1,6 @@
-﻿@using Microsoft.AspNetCore.Mvc.Rendering; 
+﻿@using Microsoft.AspNetCore.Mvc.Rendering;
 @model Management.Models.Rule
-@{ 
+@{
     var mode = ViewBag.mode;
     List<SelectListItem> operatori = new List<SelectListItem>();
     operatori.Add(new SelectListItem("<", "<"));
@@ -22,6 +22,7 @@
     if (mode == "edit") edit = true;
 
 }
+
 <style>
     .modal-dialog {
         width: auto;
@@ -78,10 +79,10 @@
                                                     <option value="@disp">@disp</option>
                                                 }
                                             }
-                                         }
+                                        }
 
                                     </select>
-                                </div>                                
+                                </div>
                                 <div class="form-group">
                                     <label class="col-form-label" asp-for="Severity"></label>
                                     @Html.DropDownListFor(m => m.Severity, severity, new { @class = "form-control input-sm rule_input" })
@@ -99,8 +100,10 @@
                                     <span asp-validation-for="Period" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
+
                                     <label class="col-form-label" asp-for="Field"></label>
-                                    <input asp-for="Field" class="form-control input-sm rule_input" />
+                                    <input asp-for="Field" id="machines_field" class="form-control input-sm rule_input" />
+
                                     <span asp-validation-for="Field" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
@@ -114,7 +117,7 @@
                                     <span asp-validation-for="Value" class="text-danger"></span>
                                 </div>
                             </div>
-                            <div class="col-md-8 ml-auto">                          
+                            <div class="col-md-8 ml-auto">
                                 <fieldset class="form-group">
                                     <legend>Inserimento actions</legend>
                                     <div class="form-group">
@@ -169,7 +172,7 @@
 
                                 </fieldset>
                             </div>
-                           
+
                         </div>
                     </div>
                     @Html.AntiForgeryToken();
@@ -200,10 +203,8 @@
     </div>
 </div>
 @await Html.PartialAsync("_ValidationScriptsPartial")
+
 <script>
-
-
-
     $(document).ready(function () {
 
         @{
@@ -214,8 +215,10 @@
 
 
 
+
         }
-  
+
+
 
     });
 

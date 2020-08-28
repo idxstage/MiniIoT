@@ -54,10 +54,66 @@
     .dataTables_scrollHeadInner, .table {
         width: 100% !important;
     }
+
+
+
+
+    .tt-input, /* UPDATE: newer versions use tt-input instead of tt-query */
+    .tt-hint {
+        display: block;
+        width: 100%;
+        height: calc(1.5em + .75rem + 2px);
+        padding: .375rem .75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: .25rem;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+
+    .tt-input { /* UPDATE: newer versions use tt-input instead of tt-query */
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    }
+
+    .tt-hint {
+        color: #999;
+    }
+
+    .tt-menu { /* UPDATE: newer versions use tt-menu instead of tt-dropdown-menu */
+        width: 422px;
+        margin-top: 12px;
+        padding: 8px 0;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    }
+
+    .tt-suggestion {
+        padding: 3px 20px;
+        font-size: 18px;
+        line-height: 24px;
+    }
+
+        .tt-suggestion.tt-cursor { /* UPDATE: newer versions use .tt-suggestion.tt-cursor */
+            color: #fff;
+            background-color: #0097cf;
+        }
+
+        .tt-suggestion p {
+            margin: 0;
+        }
 </style>
 
-<link href="~/lib/DataTables/datatables.css" rel="stylesheet" />
 <link href="~/lib/bootstrap-tagsinput-latest/src/bootstrap-tagsinput.css" rel="stylesheet" />
+
+<link href="~/lib/DataTables/datatables.css" rel="stylesheet" />
+
 <link href="~/lib/sweetalert2/sweetalert2.css" rel="stylesheet" />
 <div class="text-center">
     <h1 class="display-4">Gestione delle rules</h1>
@@ -97,35 +153,144 @@
 
 
 @section Scripts {
-    <script src="~/lib/DataTables/datatables.js"></script>
+    <script src="~/lib/jquery-typeahead/typeahead.bundle.js"></script>
+
     <script src="~/lib/bootstrap-tagsinput-latest/src/bootstrap-tagsinput.js"></script>
+
+    <script src="~/lib/DataTables/datatables.js"></script>
     <script src="~/lib/sweetalert2/sweetalert2.js"></script>
-
-
 
     <script>
         $(document).ready(function () {
 
+
+            var edit = false;
+
             //apertura form modale
             $("body").on("click", "#newRule", function () {
-                    $("#modal_container").empty();
+                $("#modal_container").empty();
+                edit = false;
                     $.get("@Url.Action("Modal","Rules", new { mode = "add" })", function (data) {
                         $("#modal_container").append(data);
                         $("#modal").modal("show");
-                        $("#machine").tagsinput();
+
+
+
+                        var machines = new Bloodhound({
+                            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                            queryTokenizer: Bloodhound.tokenizers.whitespace,
+                            prefetch: {
+                                url: "@Url.Action("GetMachines","Rules")",
+                                filter: function (list) {
+                                    return $.map(list, function (machine) {
+                                        return { name: machine };
+                                    });
+                                }
+                            }
+                        });
+                        machines.initialize();
+
+
+
+                        $('#machine').tagsinput({
+                            freeInput: true,
+                            typeaheadjs: {
+                                name: 'machines',
+                                displayKey: 'name',
+                                valueKey: 'name',
+                                source: machines.ttAdapter()
+                            }
+                        });
                     });
             });
+
+
+            $('body').on('itemRemoved', "#machine", function (event) {
+                updateField();
+            });
+
+            $('body').on('itemAdded', "#machine", function (event) {
+                if(!edit)
+                    updateField();
+            });
+
+            function updateField() {
+                //ottengo lista dispositivi inseriti dall'utente
+
+                var machinesNames = $("#machine").tagsinput('items');
+
+                //richiesta al database dell'intersezione dei field di questi dispositivi
+
+                var obj;
+
+                $.ajax({
+                    url: "@Url.Action("GetFieldsByMachines", "Rules")",
+                    type: "GET",
+                    traditional: true,
+                    data: { machines : machinesNames },
+                    success: function (response) {
+                        obj = response;
+                        var fields = new Bloodhound({
+                            datumTokenizer: Bloodhound.tokenizers.whitespace,
+                            queryTokenizer: Bloodhound.tokenizers.whitespace,
+                            local: obj
+                        });
+
+                        $('#machines_field').typeahead({
+                            hint: true,
+                            highlight: true,
+                            minLength: 1
+                        },
+                            {
+                                name: 'fields',
+                                source: fields
+                            });
+                    },
+                    error: function (response) {
+
+                    }
+                });
+            }
+
 
             $("body").on("click", ".editRule", function () {
                 var data = table.row($(this).closest('tr')).data();
                 var _id = data.id;
                 $("#modal_container").empty();
+                edit = true;
+
                     $.get("@Url.Action("Modal","Rules")" + "?mode=" + "edit&id=" + _id, function (data) {
                         $("#modal_container").append(data);
                         $("#modal").modal("show");
-                        $("#machine").tagsinput();
+                        var machines = new Bloodhound({
+                        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                        queryTokenizer: Bloodhound.tokenizers.whitespace,
+                        prefetch: {
+                            url: "@Url.Action("GetMachines","Rules")",
+                            filter: function (list) {
+                                return $.map(list, function (machine) {
+                                    return { name: machine };
+                                });
+                            }
+                        }
                     });
+                    machines.initialize();
+
+
+
+            $('#machine').tagsinput({
+                freeInput: true,
+                typeaheadjs: {
+                    name: 'machines',
+                    displayKey: 'name',
+                    valueKey: 'name',
+                    source: machines.ttAdapter()
+                }
             });
+        });
+                    });
+           
+
 
 
 
@@ -217,6 +382,9 @@
             $("#edit_rule").prop("hidden", true);
             //mostro pulsante Conferma
             $("#confirm_edit").prop("hidden", false);
+
+            edit = false;
+            updateField();
         });
 
             $("body").on("click", "#confirm_edit", function () {
@@ -255,7 +423,9 @@
 
 
 
-     
+
+
+
         //inserimento rule nella tabella
         $("body").on("click","#nuovaAction", function () {
 

@@ -17,7 +17,6 @@ using InfluxDB.Client.Core.Flux.Domain;
 using System.ComponentModel.DataAnnotations;
 using log4net;
 
-
 namespace Database
 {
   
@@ -140,6 +139,65 @@ namespace Database
             res.MachineId = machine_id;
             return JsonConvert.SerializeObject(res);
         }        
+
+
+
+        public async Task<string> GetMachines()
+        {
+            var query = $"import \"influxdata/influxdb/v1\" " +
+                $"        v1.measurements(bucket: \"{database}\")";
+
+            List<object> records = null;
+            var fluxTables = await client.GetQueryApi().QueryAsync(query);
+            foreach(var table in fluxTables)
+            {
+                records = table.Records.Select(r => r.GetValue()).ToList();
+            }
+
+
+
+
+            var payloadJson = JsonConvert.SerializeObject(records);
+            var result = new QueryResult { Payload = payloadJson };
+            return JsonConvert.SerializeObject(result);
+
+
+        }
+
+
+
+        public async Task<string> GetFieldsByMachine(List<String> machines)
+        {
+
+            List<object> records = new List<object>();
+            bool isFirst = true;
+            foreach (var machine in machines)
+            {
+                var query = $"import \"influxdata/influxdb/v1\" " +
+                $"        v1.measurementTagValues(bucket: \"{database}\", measurement: \"{machine}\", tag: \"_field\")";
+                var fluxTables = await client.GetQueryApi().QueryAsync(query);
+                if(fluxTables.Count > 0)
+                {
+                    var tempRecords = fluxTables[0].Records.Select(r => r.GetValue()).ToList();
+                    if (isFirst)
+                    {
+                        records = tempRecords;
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        records.Intersect(tempRecords);
+                    }
+                }                            
+                
+            }
+            
+            var payloadJson = JsonConvert.SerializeObject(records);
+            var result = new QueryResult { Payload = payloadJson };
+            return JsonConvert.SerializeObject(result);
+
+        }
+
 
         /// <summary>
         /// Scrittura telemetria su database

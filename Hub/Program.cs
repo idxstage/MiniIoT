@@ -75,7 +75,7 @@ namespace Hub
             try
             {
                 //Pubblicazione messaggio ricevuto su broker AMQP 
-
+               
                 var message = new AMQPMessage { Data = e, Type = AMQPMessageType.Telemetry, Sender = _config.Communications.AMQP.Queue };
                 var json = JsonConvert.SerializeObject(message);
                 await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "common" ,json);             

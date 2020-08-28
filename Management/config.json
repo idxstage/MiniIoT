@@ -11,12 +11,12 @@
     },
     "AMQP": {
       "Port": 5672,
-      "Ip": "10.0.0.73",
+      "Ip": "10.0.0.88",
       "UserName": "IoT",
       "Password": "Soluzioni.2020",
       "VirtualHost": "/",
       "Exchange": "direct_message",
-      "Queue": "alerting"
+      "Queue": "management"
 
     },
     "Email": {
@@ -32,7 +32,7 @@
     }
   },
   "InfluxDB": {
-    "Ip": "10.0.0.73",
+    "Ip": "10.0.0.88",
     "Port": 8086
   },
   "Grafana": {
@@ -75,7 +75,7 @@
       },
       {
         "Name": "RabbitMQ",
-        "Ip": "10.0.0.73",
+        "Ip": "10.0.0.88",
         "Port": 15672,
         "Timing": 10
       },

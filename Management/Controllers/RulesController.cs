@@ -19,6 +19,7 @@ using System.Net.Http.Headers;
 using com.sun.xml.@internal.fastinfoset.util;
 using InfluxDB.Client.Api.Domain;
 using Threshold = Management.Models.Threshold;
+using RabbitMQ.Client;
 
 namespace Management.Controllers
 {
@@ -31,7 +32,8 @@ namespace Management.Controllers
         private readonly IMongoCollection<Models.Rule> _rulesCollection;
         static readonly HttpClient client = new HttpClient();
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-       
+        private static ClientAMQP _amqpconn;
+        private static TaskCompletionSource<string> taskCompletionSource;
 
         public IActionResult Index()
         {
@@ -49,6 +51,24 @@ namespace Management.Controllers
                 _client = new MongoClient(_config.MongoDB.ConnectionString);
                 _database = _client.GetDatabase("MiniIoT");
                 _rulesCollection = _database.GetCollection<Models.Rule>("Rules");
+
+                //Inizializzazione client AMQP 
+                _amqpconn = new ClientAMQP();
+                _amqpconn.CreateExchange(_config.Communications.AMQP.Exchange, ExchangeType.Direct.ToString());
+
+                //creo coda management
+                _amqpconn.CreateQueue("management");
+                                
+                //bind coda database a exchange e routing key 'database' 
+                //riservato per le comunicazioni al database (es. richieste telemetrie da parte del modulo Alerting)
+                _amqpconn.BindQueue("management", "direct_message", "management");
+
+                //imposto evento ricezione messaggi AMQP
+                _amqpconn.AMQPMessageReceived += OnAMQPMessageReceived;
+                _amqpconn.ReceiveMessageAsync("management");
+
+
+                taskCompletionSource = new TaskCompletionSource<string>();
             }
             catch(Exception e)
             {
@@ -58,10 +78,79 @@ namespace Management.Controllers
         }
 
 
+
+        public async void OnAMQPMessageReceived(object sender, String msg)
+        {
+            try
+            {
+                var message = JsonConvert.DeserializeObject<AMQPMessage>(msg);
+                switch (message.Type)
+                {                    
+                    //Ricezione risposta query da parte del microservizio DATABASE
+                    case AMQPMessageType.QueryResult:
+                        var queryResultJson = message.Data;
+                        var queryResult = JsonConvert.DeserializeObject<QueryResult>(queryResultJson);
+                        taskCompletionSource.SetResult(queryResult.Payload);
+                        
+                        break;
+                }
+
+                Console.WriteLine("{0} - {1}: ", message.Type.ToString(), message.Data);
+            }
+            catch (Exception e)
+            {
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
+            }
+
+        }
+
+        
+        public async Task<string[]> GetMachines()
+        {
+            //invio richiesta query a microservizio database
+            Utils.Query q = new Utils.Query { Type = "GetMachines" };
+            var message = new AMQPMessage { Type = AMQPMessageType.Query, Data = JsonConvert.SerializeObject(q), Sender = "management" };
+            await _amqpconn.SendMessageAsync("direct_message", "database", JsonConvert.SerializeObject(message));
+
+            //ricezione query result
+            string result = await taskCompletionSource.Task;
+            var machines = JsonConvert.DeserializeObject<List<String>>(result).ToArray(); 
+            return machines;
+        }
+
+        
+        public async Task<string[]> GetFieldsByMachines(IList<string> machines)
+        {
+            if (machines.Count > 0)
+            {
+                var machinesJson = JsonConvert.SerializeObject(machines);
+                Utils.Query q = new Utils.Query { Type = "GetFieldsByMachines", Field = machinesJson };
+                var message = new AMQPMessage { Type = AMQPMessageType.Query, Data = JsonConvert.SerializeObject(q), Sender = "management" };
+                await _amqpconn.SendMessageAsync("direct_message", "database", JsonConvert.SerializeObject(message));
+
+                //ricezione query result
+                string result = await taskCompletionSource.Task;
+                if (String.IsNullOrEmpty(result))
+                {
+                    return null;
+                }
+                else
+                {
+                    var fields = JsonConvert.DeserializeObject<List<String>>(result).ToArray();
+                    return fields;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public async Task<IActionResult> Modal(String mode, String id)
         {
             try
             {
+               
                 if (mode.Equals("add"))
                 {
                     ViewBag.mode = "add";

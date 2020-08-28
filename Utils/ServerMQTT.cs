@@ -39,6 +39,7 @@ namespace Utils
                 _mqttServer = new MqttFactory().CreateMqttServer();
                 port = config.Communications.MQTT.Port;
                 users = config.Communications.MQTT.Users;
+                
             }
             catch (Exception e)
             {

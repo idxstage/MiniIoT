@@ -172,7 +172,12 @@ namespace Utils
             {
                 await Task.Run(() =>
                 {
+
                     if (String.IsNullOrEmpty(message)) throw new ArgumentNullException();
+
+                    //se non è stato specificato alcun canale, allora utilizza quello definito implicitamente nell'istanza della classe
+                    if (chan == null) chan = _channel;
+
 
                     //invio            
                     var body = Encoding.UTF8.GetBytes(message);
