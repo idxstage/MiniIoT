@@ -1,0 +1,67 @@
+{
+	"rabbit_version": "3.8.5",
+	"rabbitmq_version": "3.8.5",
+	"product_name": "RabbitMQ",
+	"product_version": "3.8.5",
+	"users": [
+		{
+			"name": "IoT",
+			"password_hash": "WohazfKY4Ue2EhERlnTWJCSv3ZNgZEmzVryaB3+VwNWo/U18",
+			"hashing_algorithm": "rabbit_password_hashing_sha256",
+			"tags": "administrator"
+		},
+		{
+			"name": "test",
+			"password_hash": "I+5oKneBw+YhTnf0YKUqGlyiKD5b3pJ5/YPm5I+WMjLEdPPw",
+			"hashing_algorithm": "rabbit_password_hashing_sha256",
+			"tags": "administrator"
+		}
+	],
+	"vhosts": [
+		{
+			"name": "/"
+		}
+	],
+	"permissions": [
+		{
+			"user": "IoT",
+			"vhost": "/",
+			"configure": ".*",
+			"write": ".*",
+			"read": ".*"
+		},
+		{
+			"user": "test",
+			"vhost": "/",
+			"configure": ".*",
+			"write": ".*",
+			"read": ".*"
+		}
+	],
+	"topic_permissions": [],
+	"parameters": [],
+	"global_parameters": [
+		{
+			"name": "cluster_name",
+			"value": "rabbit@DESKTOP-STAGE1.soluzioni-sw.it"
+		},
+		{
+			"name": "internal_cluster_id",
+			"value": "rabbitmq-cluster-id-L6mUfYinso2ue4YVTNLPfg"
+		}
+	],
+	"policies": [],
+	"queues": [],
+	"exchanges": [
+		{
+			"name": "direct_message",
+			"vhost": "/",
+			"type": "direct",
+			"durable": false,
+			"auto_delete": false,
+			"internal": false,
+			"arguments": {}
+		}
+	],
+	"bindings": []
+}

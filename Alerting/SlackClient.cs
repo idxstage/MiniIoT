@@ -55,7 +55,7 @@ namespace Alerting
                     string responseText = _encoding.GetString(response);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log.Error($"Error: {e.Message}");
             }

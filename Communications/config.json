@@ -11,13 +11,12 @@
         },
         "AMQP": {
             "Port": 5672,
-            "Ip": "10.0.0.73",
+            "Ip": "10.0.0.88",
             "UserName": "IoT",
             "Password": "Soluzioni.2020",
             "VirtualHost": "/",
             "Exchange": "direct_message",
             "Queue": "alerting"
-
         },
         "Email": {
             "SMTPServer": "smtp.libero.it",
@@ -32,8 +31,11 @@
         }
     },
     "InfluxDB": {
-        "Ip": "10.0.0.73",
+        "Ip": "10.0.0.88",
         "Port": 8086
+    },
+    "MongoDB": {
+        "ConnectionString": "mongodb://10.0.0.88:27017"
     },
     "Monitoring": {
         "Timing": 10,
@@ -42,7 +44,6 @@
                 "Name": "Alerting",
                 "Ip": "127.0.0.1",
                 "Port": 15000
-
             },
             {
                 "Name": "Database",
@@ -56,7 +57,7 @@
             },
             {
                 "Name": "Grafana",
-                "Ip": "10.0.0.73",
+                "Ip": "10.0.0.88",
                 "Port": 3000
             },
             {
@@ -66,7 +67,7 @@
             },
             {
                 "Name": "RabbitMQ",
-                "Ip": "10.0.0.73",
+                "Ip": "10.0.0.88",
                 "Port": 15672
             }
         ]

@@ -1,7 +1,7 @@
 {
   "Communications": {
     "MQTT": {
-      "Port": 1883,
+      "Port": 8999,
       "Users": [
         {
           "UserName": "Prova",
@@ -17,7 +17,6 @@
       "VirtualHost": "/",
       "Exchange": "direct_message",
       "Queue": "alerting"
-
     },
     "Email": {
       "SMTPServer": "smtp.libero.it",
@@ -36,39 +35,41 @@
     "Port": 8086
   },
   "MongoDB": {
-    "ConnectionString": "mongodb://localhost:27017"
+    "ConnectionString": "mongodb://10.0.0.88:27017"
   },
   "Monitoring": {
     "Timing": 10,
     "Modules": [
       {
         "Name": "Alerting",
-        "Ip": "127.0.0.1",
-        "Port": 15000
-
+        "Ip": "192.168.1.120",
+        "Port": 9000
       },
       {
         "Name": "Database",
-        "Ip": "127.0.0.1",
-        "Port": 15001
+        "Ip": "192.168.1.120",
+        "Port": 9001
       },
       {
         "Name": "Hub",
-        "Ip": "127.0.0.1",
-        "Port": 15002
+        "Ip": "192.168.1.120",
+        "Port": 9002
       },
       {
         "Name": "Grafana",
+        // "Ip": "192.168.1.120",
         "Ip": "10.0.0.88",
         "Port": 3000
       },
       {
         "Name": "Nodered",
-        "Ip": "127.0.0.1",
+        // "Ip": "192.168.1.120",
+        "Ip": "10.0.0.88",
         "Port": 1880
       },
       {
         "Name": "RabbitMQ",
+        // "Ip": "192.168.1.120",
         "Ip": "10.0.0.88",
         "Port": 15672
       }

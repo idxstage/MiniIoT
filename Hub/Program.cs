@@ -25,16 +25,21 @@ namespace Hub
         private static ClientAMQP _amqpconn;
         private static Config _config;
         private static readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ManualResetEvent _quitEvent = new ManualResetEvent(false);
 
         static void Main()
         {
+            Console.CancelKeyPress += (sender, eArgs) => {
+                _quitEvent.Set();
+                eArgs.Cancel = true;
+            };
 
             try
             {
                 // Inizializzazione configurazione Log4Net
                 var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
                 XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
-             
+
                 //Inizializzazione configurazione 
                 _config = Utils.Utils.ReadConfiguration();
 
@@ -53,14 +58,14 @@ namespace Hub
                 mqttC.ReceiveAsync();
 
                 _log.Info("HUB INIZIALIZZATO CORRETTAMENTE!");
+                //Console.ReadLine(); 
+                _quitEvent.WaitOne();
 
-                Console.ReadLine();
-                                 
             }
             catch (Exception e)
             {
                 _log.ErrorFormat("!ERROR: {0}", e.ToString());
-            }            
+            }
         }
 
 
@@ -70,20 +75,20 @@ namespace Hub
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private static async void OnMQTTMessageReceived(object sender, string e)
-        {            
+        {
             try
             {
                 //Pubblicazione messaggio ricevuto su broker AMQP 
-               
+
                 var message = new AMQPMessage { Data = e, Type = AMQPMessageType.Telemetry, Sender = _config.Communications.AMQP.Queue };
                 var json = JsonConvert.SerializeObject(message);
-                await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "common" ,json);             
-                
+                await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "common", json);
+
             }
             catch (Exception ex)
             {
                 _log.ErrorFormat("!ERROR: {0}", ex.ToString());
-            }                  
+            }
         }
 
         /// <summary>
@@ -103,7 +108,8 @@ namespace Hub
             catch (Exception ex)
             {
                 _log.ErrorFormat("!ERROR: {0}", ex.ToString());
-            }            
+            }
+
         }
     }
 }

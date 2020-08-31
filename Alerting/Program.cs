@@ -1,23 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Newtonsoft.Json;
-using Utils;
+using Alerting.Model;
 using log4net;
 using log4net.Config;
-using System.Collections;
-using Alerting.Model;
+using Newtonsoft.Json;
+using Utils;
 using Action = Alerting.Model.Action;
-using System.Threading.Tasks;
-using System.Text;
-using RabbitMQ.Client.Events;
-using System.Reflection.PortableExecutable;
 using System.Threading;
+using System.Threading.Tasks;
 using Query = Utils.Query;
 using System.Linq;
 using MongoDB.Driver;
@@ -37,9 +30,14 @@ namespace Alerting
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static Timer refreshRule;
         private static Timer sendMailsInstant;
+        static ManualResetEvent _quitEvent = new ManualResetEvent(false);
 
         static void Main(string[] args)
         {
+            Console.CancelKeyPress += (sender, eArgs) => {
+                _quitEvent.Set();
+                eArgs.Cancel = true;
+            };
             try
             {
                 _amqpconn = new ClientAMQP();
@@ -47,7 +45,6 @@ namespace Alerting
 
                 Modulo modulo = _config.Monitoring.Modules.Find(x => x.Name.Contains("Alerting"));
                 AliveServer(modulo.Ip, modulo.Port);
-
 
                 // Inizializzazione configurazione Log4Net
                 var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
@@ -87,16 +84,15 @@ namespace Alerting
                 sendMailsInstant = new Timer(Communications.SendAll, null, 60000, 60000); // 1 minuto
 
                 log.Info("ALERTING INIZIALIZZATO CORRETTAMENTE!");
-
-                Console.ReadLine();
+                //Console.ReadLine(); 
+                _quitEvent.WaitOne();
             }
             catch (Exception e)
             {
                 log.Error($"Error: {e.Message}");
             }
-            
-        }
 
+        }
 
         public static async void GetTelemetryFromDB(string machineId, int period, string field)
         {
@@ -119,7 +115,7 @@ namespace Alerting
                 await _amqpconn.SendMessageAsync(_config.Communications.AMQP.Exchange, "database", json, channel);
                 //Chiudo canale
                 _amqpconn.CloseChannel(channel);
-               
+
             }
             catch (Exception e)
             {
@@ -127,7 +123,6 @@ namespace Alerting
             }
 
         }
-
 
         public async static void OnAMQPMessageReceived(object sender, String msg)
         {
@@ -137,21 +132,18 @@ namespace Alerting
                 switch (message.Type)
                 {
                     case AMQPMessageType.Telemetry:
-                        await Task.Run(() =>
-                        {
+                        await Task.Run(() => {
                             CheckRules(message.Data);
                         });
 
                         break;
                     case AMQPMessageType.QueryResult:
-                        await Task.Run(() =>
-                        {
+                        await Task.Run(() => {
                             Console.WriteLine("Risposta: " + message.Data);
                             var result = JsonConvert.DeserializeObject<QueryResult>(message.Data);
 
                             List<Dictionary<string, string>> telemetrie = new List<Dictionary<string, string>>();
                             telemetrie = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(result.Payload);
-
 
                             double somma = 0;
                             List<string> indici = null;
@@ -168,7 +160,6 @@ namespace Alerting
                             if (telemetrie == null)
                                 return;
 
-
                             var k = telemetrie.GetEnumerator();
 
                             while (k.MoveNext())
@@ -177,7 +168,6 @@ namespace Alerting
                                 string field = null;
                                 indici = k.Current.Keys.ToList<string>();
                                 valori = k.Current.Values.ToList<string>();
-
 
                                 if (indici.IndexOf("ts") == 0)
                                 {
@@ -199,7 +189,6 @@ namespace Alerting
                                 }
 
                                 somma += Convert.ToDouble(field);
-
 
                                 if (Convert.ToInt32(field) > M)
                                     M = Convert.ToInt32(field);
@@ -239,7 +228,6 @@ namespace Alerting
                 log.Error($"Error: {e.Message}");
             }
 
-            
         }
 
         /// <summary>
@@ -266,7 +254,6 @@ namespace Alerting
                         regoleValide.rules.Add(r);
                 }
 
-
                 // otteniamo la telemetria per ogni macchina per quel periodo
                 foreach (Rule regola in regoleValide.rules)
                 {
@@ -288,7 +275,6 @@ namespace Alerting
             // ricerchiamo tra le regole quelle che hanno Period e Frequency non a null
             // Frequency dice ogni quanto chiediamo al db le telemetrie, period quanto vecchie
 
-            
         }
 
         /// <summary>
@@ -309,6 +295,7 @@ namespace Alerting
             {
                 log.Error($"Error: {e.Message}");
             }
+
         }
 
         private static Dictionary<string, string> SmontaTelemetria(string telemetria)
@@ -330,13 +317,13 @@ namespace Alerting
 
                 return campiTele;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
                 return new Dictionary<string, string>();
             }
-        }
 
+        }
 
         /// <summary>
         /// Metodo che gestisce la telemetria e controlla i parametri
@@ -357,7 +344,6 @@ namespace Alerting
                 if (campiTele.ContainsKey("machine_id") && campiTele.TryGetValue("machine_id", out machine))
                 {
                     var rules = await GetRulesFromDB(machine);
-
 
                     //per ogni rule nel batch
                     foreach (var r in rules)
@@ -381,7 +367,6 @@ namespace Alerting
                                     if (!campiTele.TryAdd("type_telemetry", "Instant"))
                                         campiTele["type_telemetry"] = "Instant";
                                 }
-
 
                                 switch (r.ConditionOperator)
                                 {
@@ -422,10 +407,7 @@ namespace Alerting
                 log.Error($"Error: {e.Message}");
             }
 
-            
         }
-
-
 
         /// <summary>
         /// Ritrorna tutte le regole associate ad un particolare dispositivo
@@ -443,9 +425,8 @@ namespace Alerting
                 log.Error($"Error: {e.Message}");
                 return new List<Rule>();
             }
-            
-        }
 
+        }
 
         /// <summary>
         /// Ritorna tutte le regole aventi campo frequency e period not null (per funzionalità MID)
@@ -463,10 +444,8 @@ namespace Alerting
                 log.Error($"Error: {e.Message}");
                 return new List<Rule>();
             }
-            
+
         }
-
-
 
         private async static void CheckRules(Dictionary<string, string> campiTele)
         {
@@ -504,9 +483,8 @@ namespace Alerting
                                         campiTele["type_telemetry"] = "Instant";
                                 }
                                 else
-                                    if (!campiTele.TryAdd("type_telemetry", "Average"))
+                                if (!campiTele.TryAdd("type_telemetry", "Average"))
                                     campiTele["type_telemetry"] = "Average";
-
 
                                 switch (r.ConditionOperator)
                                 {
@@ -540,8 +518,6 @@ namespace Alerting
                         }
                     }
 
-
-
                 }
                 #endregion
             }
@@ -550,7 +526,6 @@ namespace Alerting
                 log.Error($"Error: {e.Message}");
             }
 
-            
         }
 
         /// <summary>
@@ -566,36 +541,31 @@ namespace Alerting
                     switch (a.type)
                     {
                         case "Mail":
-                            Task.Run(() =>
-                            {
+                            Task.Run(() => {
                                 Communications.SendMessageSMTP(a, r, campiTele);
                             });
                             break;
 
                         case "Email":
-                            Task.Run(() =>
-                            {
+                            Task.Run(() => {
                                 Communications.SendMessageSMTP(a, r, campiTele);
                             });
                             break;
 
                         case "E-mail":
-                            Task.Run(() =>
-                            {
+                            Task.Run(() => {
                                 Communications.SendMessageSMTP(a, r, campiTele);
                             });
                             break;
 
                         case "EMAIL":
-                            Task.Run(() =>
-                            {
+                            Task.Run(() => {
                                 Communications.SendMessageSMTP(a, r, campiTele);
                             });
                             break;
 
                         case "Slack":
-                            Task.Run(() =>
-                            {
+                            Task.Run(() => {
                                 string text = "";
                                 IDictionaryEnumerator k = campiTele.GetEnumerator();
 
@@ -630,7 +600,7 @@ namespace Alerting
 
                                 // alleghiamo le operazioni da fare
                                 text += "\n\nOperation to do\n" + a.body;
-                                if(campiTele.ContainsValue("Instant"))
+                                if (campiTele.ContainsValue("Instant"))
                                     Communications.SendMessageSlack(text, a.address, true); // true sta per instant
                                 else
                                     Communications.SendMessageSlack(text, a.address, false); // non instant
@@ -645,15 +615,13 @@ namespace Alerting
                 log.Error($"Error: {e.Message}");
             }
 
-            
         }
 
         private static async void AliveServer(string ip, int port)
         {
             try
             {
-                await Task.Run(() =>
-                {
+                await Task.Run(() => {
                     PingServer server = new PingServer(ip, port);
                 });
             }
@@ -661,7 +629,7 @@ namespace Alerting
             {
                 log.Error($"Error: {e.Message}");
             }
-            
+
         }
 
     }

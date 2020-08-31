@@ -17,7 +17,6 @@
             "VirtualHost": "/",
             "Exchange": "direct_message",
             "Queue": "hub"
-
         },
         "Email": {
             "SMTPServer": "smtp.libero.it",
@@ -35,6 +34,9 @@
         "Ip": "10.0.0.88",
         "Port": 8086
     },
+    "MongoDB": {
+        "ConnectionString": "mongodb://10.0.0.88:27017"
+    },
     "Monitoring": {
         "Timing": 10,
         "Modules": [
@@ -42,7 +44,6 @@
                 "Name": "Alerting",
                 "Ip": "127.0.0.1",
                 "Port": 15000
-
             },
             {
                 "Name": "Database",

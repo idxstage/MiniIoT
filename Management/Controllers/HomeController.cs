@@ -57,11 +57,11 @@ namespace Management.Controllers
             try
             {
                 string status = "";
-            foreach (Modulo m in _config.Monitoring.Modules)
-                status += CheckAvailability(m).Result;
+                foreach (Modulo m in _config.Monitoring.Modules)
+                    status += CheckAvailability(m).Result;
 
-            // rimuoviamo l'ultimo ";"
-            return status.Remove(status.Length - 1, 1);
+                // rimuoviamo l'ultimo ";"
+                return status.Remove(status.Length - 1, 1);
             }
             catch (HttpRequestException e)
             {
@@ -75,14 +75,14 @@ namespace Management.Controllers
         {
             try
             {
-                    //uri = $"http://{modulo.Ip}:{modulo.Port}/";
+                //uri = $"http://{modulo.Ip}:{modulo.Port}/";
                 HttpRequestMessage h = new HttpRequestMessage();
 
                 Uri uri = new Uri($"http://{modulo.Ip}:{modulo.Port}/");
                 h.RequestUri = uri;
                 HttpResponseMessage response = await client.SendAsync(h);
-                
-                    
+
+
                 // analizziamo la risposta
                 if (response != null)
                     return $"{modulo.Name}:1;";
@@ -92,7 +92,7 @@ namespace Management.Controllers
             catch (HttpRequestException e)
             {
                 log.Error($"Error: {e.Message}");
-                return $"{modulo.Name}:0;";             
+                return $"{modulo.Name}:0;";
             }
         }
     }

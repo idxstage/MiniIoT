@@ -17,67 +17,59 @@
       "VirtualHost": "/",
       "Exchange": "direct_message",
       "Queue": "alerting"
-
     },
     "Email": {
-        "SMTPServer": "smtp.libero.it",
-        "User":
-        {
-          "UserName": "miniiot@libero.it",
-          "Password": "Stage.2020"
-        },
-        "Port": 465,
+      "SMTPServer": "smtp.libero.it",
+      "User": {
+        "UserName": "miniiot@libero.it",
+        "Password": "Stage.2020"
+      },
+      "Port": 465
     },
     "Slack": {
-        "UserName":"Sistema.IoT"
+      "UserName": "Sistema.IoT"
     }
   },
   "InfluxDB": {
     "Ip": "10.0.0.88",
-    "Port": 8086,
-    "Database": "TELEMETRIE",
-    "RetentionPolicy": "autogen",
-    "Username": "IoT",
-    "Password": "Soluzioni.2020"
+    "Port": 8086
+  },
+  "MongoDB": {
+    "ConnectionString": "mongodb://10.0.0.88:27017"
   },
   "Monitoring": {
+    "Timing": 10,
     "Modules": [
-        {
-          "Name": "Alerting",
-          "Ip": "127.0.0.1",
-          "Port": 15000,
-          "Timing": 10
-        },
-        {
-          "Name": "Database",
-          "Ip": "127.0.0.1",
-          "Port": 15001,
-          "Timing": 10
-        },
-        {
-          "Name": "Hub",
-          "Ip": "127.0.0.1",
-          "Port": 15002,
-          "Timing": 10
-        },
-        {
-          "Name": "Grafana",
-          "Ip": "10.0.0.88",
-          "Port": 3000,
-          "Timing": 10
-        },
-        {
-          "Name": "Nodered",
-          "Ip": "127.0.0.1",
-          "Port": 1880,
-          "Timing": 10
-        },
-        {
-          "Name": "RabbitMQ",
-          "Ip": "10.0.0.88",
-          "Port": 15672,
-          "Timing": 10
-        }
-      ]
+      {
+        "Name": "Alerting",
+        "Ip": "127.0.0.1",
+        "Port": 15000
+      },
+      {
+        "Name": "Database",
+        "Ip": "127.0.0.1",
+        "Port": 15001
+      },
+      {
+        "Name": "Hub",
+        "Ip": "127.0.0.1",
+        "Port": 15002
+      },
+      {
+        "Name": "Grafana",
+        "Ip": "10.0.0.88",
+        "Port": 3000
+      },
+      {
+        "Name": "Nodered",
+        "Ip": "127.0.0.1",
+        "Port": 1880
+      },
+      {
+        "Name": "RabbitMQ",
+        "Ip": "10.0.0.88",
+        "Port": 15672
+      }
+    ]
   }
 }

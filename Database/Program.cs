@@ -1,23 +1,24 @@
-﻿using log4net;
-using log4net.Config;
-using Newtonsoft.Json;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using log4net;
+using log4net.Config;
+using Newtonsoft.Json;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using Utils;
-
 
 namespace Database
 {
     public enum MessageType
     {
-        Telemetria, Messaggio
+        Telemetria,
+        Messaggio
     }
     public class Program
     {
@@ -25,8 +26,13 @@ namespace Database
         private static ClientAMQP _amqpconn;
         private static Config _config;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ManualResetEvent _quitEvent = new ManualResetEvent(false);
         static void Main(string[] args)
         {
+            Console.CancelKeyPress += (sender, eArgs) => {
+                _quitEvent.Set();
+                eArgs.Cancel = true;
+            };
 
             try
             {
@@ -39,11 +45,11 @@ namespace Database
 
                 //Inizializzazione connessione con InfluxDB
                 _dbconnection = new DBConnection();
-                
+
                 //Inizializzazione modulo di monitoring
                 Modulo modulo = _config.Monitoring.Modules.Find(x => x.Name.Contains("Database"));
                 AliveServer(modulo.Ip, modulo.Port);
-                           
+
                 //Inizializzazione client AMQP
                 _amqpconn = new ClientAMQP();
                 var exchange = _config.Communications.AMQP.Exchange;
@@ -67,13 +73,14 @@ namespace Database
                 _amqpconn.ReceiveMessageAsync(queue);
 
                 log.Info("DATABASE INIZIALIZZATO CORRETTAMENTE!");
-                Console.ReadLine();
+                //Console.ReadLine(); 
+                _quitEvent.WaitOne();
             }
             catch (Exception e)
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
-           
+
         }
 
         /// <summary>
@@ -95,7 +102,6 @@ namespace Database
                         break;
                     //Ricezione richiesta di query da parte del microservizio DATABASE
                     case AMQPMessageType.Query:
-                        
                         var query = JsonConvert.DeserializeObject<Query>(message.Data);
                         int period = query.Period;
                         var machineId = query.MachineId;
@@ -131,7 +137,7 @@ namespace Database
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
-           
+
         }
 
         /// <summary>
@@ -143,8 +149,7 @@ namespace Database
         {
             try
             {
-                await Task.Run(() =>
-                {
+                await Task.Run(() => {
                     PingServer server = new PingServer(ip, port);
                 });
             }
@@ -153,7 +158,7 @@ namespace Database
 
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
-            
+
         }
     }
 }

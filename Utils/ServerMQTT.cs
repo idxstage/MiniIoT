@@ -19,11 +19,12 @@ using System.Reflection;
 
 namespace Utils
 {
+
     public class ServerMQTT
     {
-        public EventHandler<String> MessageReceived;             
+        public EventHandler<String> MessageReceived;
         private readonly IMqttServer _mqttServer;
-        private readonly int port;        
+        private readonly int port;
         private readonly List<User> users;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -37,12 +38,11 @@ namespace Utils
                 _mqttServer = new MqttFactory().CreateMqttServer();
                 port = config.Communications.MQTT.Port;
                 users = config.Communications.MQTT.Users;
-                
             }
             catch (Exception e)
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
-            }          
+            }
         }
 
         protected virtual void OnMQTTMessageReceived(String telemetria)
@@ -57,53 +57,52 @@ namespace Utils
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
+        }
 
-        }        
-    
         public async void StartAsync()
         {
             try
             {
                 var optionsBuilder = new MqttServerOptionsBuilder()
-                .WithDefaultEndpoint().WithDefaultEndpointPort(port).WithConnectionBacklog(100).WithConnectionValidator(
-                c =>
-                {                  
-                    var currentUser = users.FirstOrDefault(u => u.UserName == c.Username);
-
-                    if (currentUser == null)
+                    .WithDefaultEndpoint().WithDefaultEndpointPort(port).WithConnectionBacklog(100).WithConnectionValidator(
+                    c =>
                     {
-                        c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                        var currentUser = users.FirstOrDefault(u => u.UserName == c.Username);
+
+                        if (currentUser == null)
+                        {
+                            c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                         //log
                         return;
-                    }
+                        }
 
-                    if (c.Username != currentUser.UserName)
-                    {
-                        c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                        if (c.Username != currentUser.UserName)
+                        {
+                            c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                         //log
                         return;
-                    }
+                        }
 
-                    if (c.Password != currentUser.Password)
-                    {
-                        c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+                        if (c.Password != currentUser.Password)
+                        {
+                            c.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
                         //log
                         return;
-                    }
+                        }
 
-                    c.ReasonCode = MqttConnectReasonCode.Success;
-                    
-                });
+                        c.ReasonCode = MqttConnectReasonCode.Success;
 
-            // e avviamo il server in modalità asincrona
-            
-                await _mqttServer.StartAsync(optionsBuilder.Build());           
+                    });
+
+                // e avviamo il server in modalità asincrona
+
+                await _mqttServer.StartAsync(optionsBuilder.Build());
             }
             catch (Exception e)
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
-           
+
         }
 
         public void ReceiveAsync()
@@ -131,7 +130,7 @@ namespace Utils
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
-                           
+
         }
 
         public async void SendAsync(string topic, string payload)
@@ -151,7 +150,7 @@ namespace Utils
             catch (Exception e)
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
-            }            
+            }
         }
     }
 }

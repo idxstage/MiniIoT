@@ -1,0 +1,141 @@
+version: "3"
+
+# https://docs.docker.com/compose/compose-file/#networks
+networks:
+  mini_iot:
+
+services: 
+
+#   alerting:
+#     build: 
+#       context: .
+#       dockerfile: Alerting.Dockerfile
+#     ports: 
+#       - 9000:9000
+#     networks:
+#       - "mini_iot"
+#     volumes:
+#       - ./docker/Logs/alerting:/app/Logs
+#       # - ./config.json:/app/config.json
+#     depends_on: 
+#       - influxdb
+#       - rabbitmq
+
+#   database:
+#     build: 
+#       context: .
+#       dockerfile: database.Dockerfile
+#     ports: 
+#       - 9001:9001
+#     networks:
+#       - "mini_iot"
+#     volumes:
+#       - ./docker/Logs/database:/app/Logs
+#       # - ./config.json:/app/config.json
+#     depends_on: 
+#       - influxdb
+#       - rabbitmq
+
+#   hub:
+#     build: 
+#       context: .
+#       dockerfile: Hub.Dockerfile
+#     ports: 
+#       - 9002:9002
+#       - 8999:8999
+#     networks:
+#       - "mini_iot"
+#     volumes:
+#       - ./docker/Logs/hub:/app/Logs
+#       # - ./config.json:/app/config.json
+#     depends_on: 
+#       - influxdb
+#       - rabbitmq
+
+#   management:
+#     build: 
+#       context: .
+#       dockerfile: Management.Dockerfile
+#     ports: 
+#       - 9003:80
+#     networks:
+#       - "mini_iot"
+#     volumes:
+#       - ./docker/Logs/management:/app/Logs
+#       # - ./config.json:/app/config.json
+#     depends_on: 
+#       - alerting
+#       - database
+#       - hub
+#       - influxdb
+#       - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    # hostname: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    # environment:
+    #   - RABBITMQ_DEFAULT_USER=IoT
+    #   - RABBITMQ_DEFAULT_PASS=Soluzioni.2020
+    networks:
+      - "mini_iot"
+    volumes:
+      # - "./docker/rabbit:/var/lib/rabbitmq"
+      - "./docker/rabbit/etc/UserDefinition.json:/etc/rabbitmq/definitions.json"
+      - "./rabbitmq/etc/rabbitmq.conf:/etc/rabbitmq/advanced.config"
+      - "./rabbitmq/data:/var/lib/rabbitmq/mnesia/rabbit@my-rabbit"
+      - "./rabbitmq/logs:/var/log/rabbitmq/log"
+
+#   grafana:
+#     image: grafana/grafana:6.7.4
+#     container_name: grafana
+#     ports:
+#       - "3000:3000"
+#     networks:
+#       - "mini_iot"
+#     volumes:
+#       # Data persistency
+#       # sudo mkdir -p /srv/docker/grafana/data; chown 472:472 /srv/docker/grafana/data
+#       - ./docker/grafana/data:/var/lib/grafana
+#       - ./docker/grafana/log:/var/log/grafana
+#       - ./docker/grafana/conf/custom.ini:/usr/share/grafana/conf/custom.ini
+#     depends_on: 
+#       - rabbitmq
+  
+#   influxdb:
+#     image: influxdb:latest
+#     container_name: influxdb
+#     ports:
+#       - "8083:8083"
+#       - "8086:8086"
+#       - "8090:8090"
+#     networks:
+#       - "mini_iot"
+#     env_file:
+#       - 'env.influxdb'
+#     volumes:
+#       # Data persistency
+#       # sudo mkdir -p /srv/docker/influxdb/data
+#       - ./docker/influxdb:/var/lib/influxdb
+#     depends_on: 
+#       - rabbitmq
+
+#   nodered:
+#     image: nodered/node-red
+#     container_name: nodered
+#     environment:
+#       - TZ=Europe/Rome
+#       - NODE_RED_CREDENTIAL_SECRET=miniIot_Stage
+#     ports:
+#       - "1880:1880"
+#     networks:
+#       - "mini_iot"
+#     volumes:
+#       # Data persistency
+#       # sudo mkdir -p /srv/docker/influxdb/data
+#       - ./docker/nodered:/data
+#     depends_on: 
+#       - rabbitmq

@@ -17,7 +17,6 @@
       "VirtualHost": "/",
       "Exchange": "direct_message",
       "Queue": "management"
-
     },
     "Email": {
       "SMTPServer": "smtp.libero.it",
@@ -35,61 +34,41 @@
     "Ip": "10.0.0.88",
     "Port": 8086
   },
-  "Grafana": {
-    "Enabled":  true
-  },
   "MongoDB": {
-    "ConnectionString": "mongodb://localhost:27017"
+    "ConnectionString": "mongodb://10.0.0.88:27017"
   },
   "Monitoring": {
+    "Timing": 10,
     "Modules": [
       {
         "Name": "Alerting",
         "Ip": "127.0.0.1",
-        "Port": 15000,
-        "Timing": 10
+        "Port": 15000
       },
       {
         "Name": "Database",
         "Ip": "127.0.0.1",
-        "Port": 15001,
-        "Timing": 10
+        "Port": 15001
       },
       {
         "Name": "Hub",
         "Ip": "127.0.0.1",
-        "Port": 15002,
-        "Timing": 10
+        "Port": 15002
       },
       {
         "Name": "Grafana",
         "Ip": "10.0.0.88",
-        "Port": 3000,
-        "Timing": 10
+        "Port": 3000
       },
       {
         "Name": "Nodered",
         "Ip": "127.0.0.1",
-        "Port": 1880,
-        "Timing": 10
+        "Port": 1880
       },
       {
         "Name": "RabbitMQ",
         "Ip": "10.0.0.88",
-        "Port": 15672,
-        "Timing": 10
-      },
-      {
-        "Name": "MongoDB",
-        "Ip": "127.0.0.1",
-        "Port": 27017,
-        "Timing": 10
-      },
-      {
-        "Name": "InfluxDB",
-        "Ip": "127.0.0.1",
-        "Port": 8086,
-        "Timing": 10
+        "Port": 15672
       }
     ]
   }

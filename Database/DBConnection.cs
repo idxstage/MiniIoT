@@ -1,28 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
+using System.Threading.Tasks;
 using InfluxDB.Client;
 using InfluxDB.Client.Api.Domain;
 using InfluxDB.Client.Core;
+using InfluxDB.Client.Core.Flux.Domain;
+using InfluxDB.Client.Flux;
 using InfluxDB.Client.Writes;
+using log4net;
+using MQTTnet.Client.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils;
-using InfluxDB.Client.Flux;
-using System.Threading.Tasks;
-using MQTTnet.Client.Options;
-using System.Linq;
-using System.Reflection.PortableExecutable;
-using InfluxDB.Client.Core.Flux.Domain;
-using System.ComponentModel.DataAnnotations;
-using log4net;
 
 namespace Database
 {
-  
+
     class DBConnection
     {
-        private readonly InfluxDBClient client;      
+        private readonly InfluxDBClient client = null;
         private readonly string retentionPolicy;
         private readonly string database;
         private static readonly ILog log = LogManager.GetLogger(typeof(DBConnection));
@@ -32,11 +32,17 @@ namespace Database
             {
                 //lettura configurazione
                 Config config = Utils.Utils.ReadConfiguration();
-                String connString = String.Format("http://{0}:{1}", config.InfluxDB.Ip, config.InfluxDB.Port);
-                //creazione client per connessione al db
-                database = config.InfluxDB.Database;
-                retentionPolicy = config.InfluxDB.RetentionPolicy;
-                client = InfluxDBClientFactory.CreateV1(connString, config.InfluxDB.Username, config.InfluxDB.Password.ToCharArray(), database, retentionPolicy);
+                String connString = "";
+                if (config != null)
+                {
+                    connString = String.Format("http://{0}:{1}", config.InfluxDB.Ip, config.InfluxDB.Port);
+                    //creazione client per connessione al db
+                    database = config.InfluxDB.Database;
+                    retentionPolicy = config.InfluxDB.RetentionPolicy;
+                    string username = config.InfluxDB.Username;
+                    char[] password = config.InfluxDB.Password.ToCharArray();
+                    client = InfluxDBClientFactory.CreateV1(connString, username, password, database, retentionPolicy);
+                }
                 if (client == null)
                     throw new Exception("Impossibile stabilire connessione con il database!");
             }
@@ -44,7 +50,7 @@ namespace Database
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
-            
+
         }
         ~DBConnection()
         {
@@ -56,9 +62,9 @@ namespace Database
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
-            
+
         }
-        
+
         /// <summary>
         /// Lettura telemetrie da database
         /// </summary>
@@ -68,7 +74,7 @@ namespace Database
         /// <returns></returns>
         public async Task<String> ReadData(String machine_id, String field, int period = 0)
         {
-            
+
             String json = "";
             long elapsedMs = 0;
             var res = new QueryResult();
@@ -76,8 +82,8 @@ namespace Database
             try
             {
                 var query = $"from(bucket:\"{database}\") " +
-                                $"|> range(start: -{period}s) " +
-                                $"|> filter(fn: (r) => r._measurement == \"{machine_id}\" and r._field == \"{field}\")";
+                    $"|> range(start: -{period}s) " +
+                    $"|> filter(fn: (r) => r._measurement == \"{machine_id}\" and r._field == \"{field}\")";
 
                 //esecuzione query
                 var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -86,11 +92,11 @@ namespace Database
                 elapsedMs = watch.ElapsedMilliseconds;
 
                 //se ci sono risultati ( se count = 0  =>  non ci sono risultati)
-                if (fluxTables!= null && fluxTables.Count > 0)
+                if (fluxTables != null && fluxTables.Count > 0)
                 {
-                    
+
                     //Nota: InfluxDB restituisce i risultati come lista di colonne
-                    
+
                     //numero di colonne dei risultati
                     int countColumns = fluxTables.Count;
                     //numero di righe dei risultati
@@ -138,9 +144,7 @@ namespace Database
             res.Payload = json;
             res.MachineId = machine_id;
             return JsonConvert.SerializeObject(res);
-        }        
-
-
+        }
 
         public async Task<string> GetMachines()
         {
@@ -149,22 +153,15 @@ namespace Database
 
             List<object> records = null;
             var fluxTables = await client.GetQueryApi().QueryAsync(query);
-            foreach(var table in fluxTables)
+            foreach (var table in fluxTables)
             {
                 records = table.Records.Select(r => r.GetValue()).ToList();
             }
 
-
-
-
             var payloadJson = JsonConvert.SerializeObject(records);
             var result = new QueryResult { Payload = payloadJson };
             return JsonConvert.SerializeObject(result);
-
-
         }
-
-
 
         public async Task<string> GetFieldsByMachine(List<String> machines)
         {
@@ -176,7 +173,7 @@ namespace Database
                 var query = $"import \"influxdata/influxdb/v1\" " +
                 $"        v1.measurementTagValues(bucket: \"{database}\", measurement: \"{machine}\", tag: \"_field\")";
                 var fluxTables = await client.GetQueryApi().QueryAsync(query);
-                if(fluxTables.Count > 0)
+                if (fluxTables.Count > 0)
                 {
                     var tempRecords = fluxTables[0].Records.Select(r => r.GetValue()).ToList();
                     if (isFirst)
@@ -188,16 +185,15 @@ namespace Database
                     {
                         records.Intersect(tempRecords);
                     }
-                }                            
-                
+                }
+
             }
-            
+
             var payloadJson = JsonConvert.SerializeObject(records);
             var result = new QueryResult { Payload = payloadJson };
             return JsonConvert.SerializeObject(result);
 
         }
-
 
         /// <summary>
         /// Scrittura telemetria su database
@@ -239,8 +235,6 @@ namespace Database
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
-            
         }
     }
- }
-
+}

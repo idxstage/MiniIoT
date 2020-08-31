@@ -30,10 +30,7 @@ namespace Utils
 
         [JsonProperty("type")]
         public string Type { get; set; }
-
     }
-
-
 
     public class QueryResult
     {

@@ -102,7 +102,7 @@ namespace Utils
             {
                 log.Error($"ERROR: {e.Message}");
             }
-                      
+
         }
 
         public void BindQueue(String queueName, String exchangeName, String routingKey)
@@ -114,13 +114,13 @@ namespace Utils
               exchange: exchangeName,
               routingKey: routingKey);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log.Error($"ERROR: {e.Message}");
             }
         }
 
-           
+
         public void Close()
         {
             try
@@ -142,7 +142,7 @@ namespace Utils
             {
                 await Task.Run(() =>
                 {
-                     
+
                     if (String.IsNullOrEmpty(message)) throw new ArgumentNullException();
 
                     //invio             
@@ -153,15 +153,15 @@ namespace Utils
                                          routingKey: routingKey,
                                          basicProperties: null,
                                          body: body);
-                    }               
-                                        
+                    }
+
                     log.InfoFormat("+MESSAGE-SEND: PAYLOAD: {0}", message);
                 });
             }
-            
+
             catch (Exception e)
             {
-               log.ErrorFormat("!ERROR: {0}", e.ToString());
+                log.ErrorFormat("!ERROR: {0}", e.ToString());
             }
         }
 
@@ -172,12 +172,10 @@ namespace Utils
             {
                 await Task.Run(() =>
                 {
-
                     if (String.IsNullOrEmpty(message)) throw new ArgumentNullException();
 
                     //se non è stato specificato alcun canale, allora utilizza quello definito implicitamente nell'istanza della classe
                     if (chan == null) chan = _channel;
-
 
                     //invio            
                     var body = Encoding.UTF8.GetBytes(message);
@@ -206,7 +204,7 @@ namespace Utils
         }
 
         public void CloseChannel(IModel chan)
-        {      
+        {
             chan.Close();
         }
 
@@ -217,9 +215,9 @@ namespace Utils
                 var consumer = new AsyncEventingBasicConsumer(_channel);
                 String message = "";
                 consumer.Received += async (model, ea) =>
-                {                    
-                    var body = ea.Body;                    
-                    message = Encoding.UTF8.GetString(body.ToArray());                  
+                {
+                    var body = ea.Body;
+                    message = Encoding.UTF8.GetString(body.ToArray());
                     log.InfoFormat("+MESSAGE-READ: PAYLOAD: {0}", message);
                     OnAMQPMessageReceived(message);
                     await Task.Yield();
@@ -234,7 +232,7 @@ namespace Utils
             catch (Exception e)
             {
                 log.ErrorFormat("!ERROR: {0}", e.ToString());
-            }       
+            }
         }
     }
 }

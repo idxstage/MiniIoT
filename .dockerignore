@@ -1,0 +1,6 @@
+**/node_modules
+**/[Bb]in
+**/[Oo]bj
+**/.github/
+*.Test/
+**/.vs

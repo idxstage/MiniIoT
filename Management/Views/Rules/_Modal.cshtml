@@ -22,7 +22,6 @@
     if (mode == "edit") edit = true;
 
 }
-
 <style>
     .modal-dialog {
         width: auto;
@@ -100,10 +99,8 @@
                                     <span asp-validation-for="Period" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
-
                                     <label class="col-form-label" asp-for="Field"></label>
-                                    <input asp-for="Field" id="machines_field" class="form-control input-sm rule_input" />
-
+                                    <input asp-for="Field" class="form-control input-sm rule_input" />
                                     <span asp-validation-for="Field" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
@@ -203,8 +200,10 @@
     </div>
 </div>
 @await Html.PartialAsync("_ValidationScriptsPartial")
-
 <script>
+
+
+
     $(document).ready(function () {
 
         @{
@@ -215,9 +214,7 @@
 
 
 
-
         }
-
 
 
     });
